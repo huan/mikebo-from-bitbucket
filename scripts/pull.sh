@@ -32,7 +32,7 @@ GAPPS_CMD="$BASE_DIR/../node_modules/.bin/gapps"
 
 fileId=$(grep fileId "$GAPPS_CONFIG" | cut -d'"' -f4)
 path=$(grep path "$GAPPS_CONFIG" | cut -d'"' -f4)
-[ -n "$fileId" && -n "$path"] || {
+[ -n "$fileId" ] && [ -n "$path"] || {
   echo "fileId[$fileId] or path[$path] not found!"
   exit 255
 }
