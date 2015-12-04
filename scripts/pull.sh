@@ -42,7 +42,7 @@ echo -n "Start pulling GAS script id: $fileId from ggoogle drive... "
 #mv -f "$GAPPS_CONFIG" "${GAPPS_CONFIG}.bak"
 
 cd "$BASE_DIR/.."
-$GAPPS_CMD clone $fileId $path
+$GAPPS_CMD -k $fileId -s $path -o clone
 
 echo "Done."
 echo
