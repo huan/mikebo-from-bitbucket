@@ -2,6 +2,8 @@
 
 GIT_STATUS=$( git status -s | wc -l )
 
+[ "$1" = "force" ] && GIT_STATUS=0
+
 [ "$GIT_STATUS" -gt 0 ] && {
   git status
   echo
@@ -46,4 +48,24 @@ echo $GAPPS_CMD clone --subdir $path --overwrite $fileId bug-compatible
 $GAPPS_CMD clone --subdir $path --overwrite $fileId bug-compatible
 
 echo "Done."
+
+#
+# Remove .gitignore files in src
+#
+echo -n "Removing useless files in src directory... "
+path=$(grep path "$GAPPS_CONFIG" | cut -d'"' -f4)
+[ -n "$path" ] || {
+  echo "path not found!"
+  exit 255
+}
+
+for uselessFile in $( cat $BASE_DIR/../$path/.gitignore ); do
+  echo -n " $uselessFile "
+  rm -f $BASE_DIR/../$path/$uselessFile
+done
+
+echo "Done."
+
+
 echo
+
