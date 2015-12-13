@@ -11,12 +11,13 @@ function moveFromInboxToBeDeleted() {
   + ' '
   + 'NOT (wufoo.com)'
   
-  Logger.log(QUERY_PATTERN)
+  log(log.DEBUG, QUERY_PATTERN)
+  
   // search for mails
   var threads = GmailApp.search(QUERY_PATTERN, 0, 9)
   
   if (threads.length <= 0) {
-    log(LOG_DEBUG, 'InboxCleaner: No new matched mail by search')
+    log(log.DEBUG, 'InboxCleaner: No new matched mail by search')
     return
   }
   
@@ -26,8 +27,9 @@ function moveFromInboxToBeDeleted() {
 
   var numBp = 0
  
-  Logger.log(threads.length)
-  Logger.log(threads[0].getMessages()[0].getFrom())
+//  log(log.DEBUG, threads.length)
+//  log(log.DEBUG, threads[0].getMessages()[0].getFrom())
+
   // I'll do it myself: dont clean mail from my contacts.
   threads = threads.filter(function (t) { return !isMyContact(t.getMessages()[0].getFrom()) }) 
 //  Logger.log(threads.length)
@@ -45,8 +47,10 @@ function moveFromInboxToBeDeleted() {
     *
     */
     var to = thread.getMessages()[0].getTo()
+    var from = thread.getMessages()[0].getFrom()
+
     var isReplied = false
-    if (/bp@pre/i.test(to)) {
+    if (/bp@pre/i.test(to) && !isMyContact(from)) {
       replySubmitGuide_(thread.getMessages()[0])
       isReplied = true
     }
@@ -54,7 +58,7 @@ function moveFromInboxToBeDeleted() {
     thread.addLabel(labelToBeDeleted)    
     thread.moveToArchive()
     
-    log(LOG_INFO
+    log(log.INFO
         , 'InboxCleaner%s: %s from %s to %s.'
         , isReplied ? '(replied)' : ''
         , thread.getFirstMessageSubject()
@@ -63,7 +67,7 @@ function moveFromInboxToBeDeleted() {
        )
   }     
   
-  log(LOG_DEBUG
+  log(log.DEBUG
       , 'InboxSkipper: move %s to ToBeDeleted.'
       , Math.floor(threads.length)
      )
@@ -76,7 +80,7 @@ function moveFromInboxToBeDeleted() {
 */
 function replySubmitGuide_(message) {
 
-//  log(LOG_INFO, 'reply submit guide')
+//  log(log.INFO, 'reply submit guide')
   
   var from = message.getFrom()
   var name = getEmailName(from)

@@ -31,7 +31,7 @@ var DEBUG=true
 */ 
 function bp2Ticket() {
 
-  log(LOG_DEBUG, 'bp2Ticket start.')
+  log(log.DEBUG, 'bp2Ticket start.')
   
   /**
   *
@@ -42,7 +42,7 @@ function bp2Ticket() {
 //  DEBUG_SEARCH_PATTERN='“船来船网”细分行业B2B项目计划书'
 
   if (DEBUG && DEBUG_SEARCH_PATTERN) {
-    log(LOG_DEBUG, 'DEBUG_SEARCH_PATTERN: ' + DEBUG_SEARCH_PATTERN)
+    log(log.DEBUG, 'DEBUG_SEARCH_PATTERN: ' + DEBUG_SEARCH_PATTERN)
     processBpThreads('label:inbox ' + DEBUG_SEARCH_PATTERN)
     return
   }
@@ -95,21 +95,21 @@ function bp2Ticket() {
   var numBp = 0
   
   for (var name in NEW_BP_PATTERNS) {
-    log(LOG_DEBUG, 'process %s ->[ %s ]', name, NEW_BP_PATTERNS[name])
+    log(log.DEBUG, 'process %s ->[ %s ]', name, NEW_BP_PATTERNS[name])
     var [m, n] = processBpThreads(NEW_BP_PATTERNS[name])
     
     total += Math.floor(m)
     numBp += Math.floor(n)
 
     if (n) {
-      log(LOG_DEBUG, 'bp2Ticket %s processed %s/%s mail(s, bp/total)', name, n, m)
+      log(log.DEBUG, 'bp2Ticket %s processed %s/%s mail(s, bp/total)', name, n, m)
     }
   }
 
-  var logLevel = LOG_DEBUG
-//  if (total > 0) logLevel = LOG_INFO
+//  var logLevel = log.DEBUG
+//  if (total > 0) logLevel = log.INFO
   
-  log(logLevel, 'bp2Ticket processed %s/%s mail(s, bp/total)', numBp, total)
+  log(log.DEBUG, 'bp2Ticket processed %s/%s mail(s, bp/total)', numBp, total)
 }
 
 /**
@@ -130,7 +130,7 @@ function processBpThreads(pattern) {
   var threads = GmailApp.search(pattern, 0, NUM_PER_QUERY)
   
   if (threads.length <= 0) {
-    log(LOG_DEBUG, 'No matched mail by search')
+    log(log.DEBUG, 'No matched mail by search')
     return [0,0]
   }
   
@@ -156,7 +156,7 @@ function processBpThreads(pattern) {
     
     var isNotBp = isNotNewBizPlan(messages)
     
-    log(LOG_INFO, "BP2Ticket %s: %s from %s to %s because %s."
+    log(log.INFO, "BP2Ticket %s: %s from %s to %s because %s."
         , isNotBp ? 'NotBP' : 'BP' 
         , messages[0].getSubject().substring(0,30)
         , messages[0].getReplyTo() || messages[0].getFrom()
@@ -200,19 +200,19 @@ function processBpThreads(pattern) {
       if (!/bp@/.test(messages[0].getTo() + ',' + messages[0].getCc())) {
         forwardMessage = forwardToZixiaBpGroup(messages[0])
         if (forwardMessage) {
-          log(LOG_INFO, 'forwarded')
+          log(log.INFO, 'forwarded')
           forwardMessage.moveToTrash()
         }
       }
 
       thread.removeLabel(labelBugBo)
     } catch (e) {
-      log(LOG_ERR, 'addToTicket Error:' + e)
+      log(log.ERR, 'addToTicket Error:' + e)
     }       
            
   }
   
-  log(LOG_DEBUG, 'processed %s BizPlan(s).', numBp)
+  log(log.DEBUG, 'processed %s BizPlan(s).', numBp)
   
   return [threads.length, numBp]
 }
@@ -234,7 +234,7 @@ function forwardToZixiaBpGroup(message) {
   var eightMegaByte = 8 * 1024 * 1024
     
   if (totalSize > eightMegaByte) {
-    log(LOG_INFO, 'attachment size: %s, > 8MB(%s), skipped.', totalSize, eightMegaByte)
+    log(log.INFO, 'attachment size: %s, > 8MB(%s), skipped.', totalSize, eightMegaByte)
     return null
   }
   
@@ -252,7 +252,7 @@ function forwardToZixiaBpGroup(message) {
     // must use GmailApp getThread, for force reload
     var thread = GmailApp.getThreadById(threadId)
     
-    log(LOG_DEBUG, 'forward ttl:%s, message num:%s', ttl, thread.getMessages().length)
+    log(log.DEBUG, 'forward ttl:%s, message num:%s', ttl, thread.getMessages().length)
     
     messages = thread.getMessages().filter(function(m) {
       return (!m.isInTrash() && 'zixia@zixia.net' == m.getFrom() && ZIXIABPGROUP == m.getTo())
@@ -297,7 +297,7 @@ function addToTicket(thread) {
     var notice = Utilities.formatString('<p>NOTICE: %s attachments too large.</p><br />', Math.floor(attachments.length))
     description = notice + description
     
-    log(LOG_INFO, 'attachments dropped. original %s attachments.', Math.floor(attachments.length))
+    log(log.INFO, 'attachments dropped. original %s attachments.', Math.floor(attachments.length))
   }
 
   return createFreshdeskTicket(from, to + ',' + cc, subject, description, pickedAttachments)
@@ -323,7 +323,7 @@ function isNotNewBizPlan(messages) {
   
   for (var i=0; i<messages.length; i++) {
     
-//    log(LOG_INFO, messages[i].getFrom())
+//    log(log.INFO, messages[i].getFrom())
     // skip google group response, it means nothing
     if (/@google.com/.test(messages[i].getFrom()) ) continue
       
@@ -383,7 +383,7 @@ function createFreshdeskTicket(from, to, subject, description, attachments) {
   if (recipients.length > 3) {   
     // need not CC to them
     to = ''  
-    log(LOG_ALERT, 'Too many(%s) recipients. will not cc anybody.', recipients.length)
+    log(log.ALERT, 'Too many(%s) recipients. will not cc anybody.', recipients.length)
   }
   
   /**

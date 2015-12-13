@@ -6,7 +6,7 @@ function testContact() {
 //  var isKnown = isMyContact('sadfa <zixia@zixia.net>')
   var n = 'yangjinyu@muche365.com <yangjinyu@muche365.com>, yangjinyu2@muche3652.com <yangjinyu2@muche3652.com>'
   
-  log(LOG_INFO, 'isKnown: %s', getEmailName(n)[1])
+  log(log.INFO, 'isKnown: %s', getEmailName(n)[1])
 }
 
 function isMyContact(email) {
@@ -44,14 +44,14 @@ function reloadContacts() {
   * 1. Load contacts from google contact. (very slow, for minutes.)
   *
   */
-  log(LOG_DEBUG, 'Start loading contacts...')
+  log(log.DEBUG, 'Start loading contacts...')
   
 //  var contacts = ContactsApp.getContacts()
   var contacts = ContactsApp
   .getContactGroup('System Group: My Contacts')
   .getContacts()
   
-  log(LOG_DEBUG, 'Contacts loaded.')
+  log(log.DEBUG, 'Contacts loaded.')
   
   /**
   *
@@ -69,7 +69,7 @@ function reloadContacts() {
       values.push([e.getAddress()])
     })
   })
-  log(LOG_DEBUG, 'Email address loaded.')
+  log(log.DEBUG, 'Email address loaded.')
 
   /**
   *
@@ -85,7 +85,7 @@ function reloadContacts() {
   
   var remainingDailyQuota = MailApp.getRemainingDailyQuota()
   
-  log(LOG_INFO, 'Sheet for contacts set: Total contact: %s , email: %s , quota left: %s .', contacts.length, values.length, remainingDailyQuota)
+  log(log.INFO, 'Sheet for contacts set: Total contact: %s , email: %s , quota left: %s .', contacts.length, values.length, remainingDailyQuota)
 
 }
 
@@ -133,4 +133,21 @@ function getEmailName(emailString) {
   
   return name ?
     name : emailString
+}
+
+/**
+*
+* find a named sheet
+*
+*/
+function getSheet(name) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name)
+
+  // create log sheet if not exist
+  if (!sheet) {
+    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(name)
+    log(LOG_WARNING, 'Sheet Created for %s', name)
+  }
+
+  return sheet
 }
