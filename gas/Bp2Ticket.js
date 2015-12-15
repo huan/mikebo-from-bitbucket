@@ -23,7 +23,6 @@ var LABEL_BUGBO = 'Mike/BugBo'
 */
 var DEBUG=true
 
-
 /**************************************************************************
 *
 * Main
@@ -81,7 +80,7 @@ function bp2Ticket() {
     + ' '
     + '一句最能打动你的名言'
     + ' '
-    + '融资申请'
+    + '融资申请 NOT from:service@m.jsform.com'
 
   }
   

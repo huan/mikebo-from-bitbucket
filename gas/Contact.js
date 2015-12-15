@@ -135,19 +135,3 @@ function getEmailName(emailString) {
     name : emailString
 }
 
-/**
-*
-* find a named sheet
-*
-*/
-function getSheet(name) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name)
-
-  // create log sheet if not exist
-  if (!sheet) {
-    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(name)
-    log(LOG_WARNING, 'Sheet Created for %s', name)
-  }
-
-  return sheet
-}
