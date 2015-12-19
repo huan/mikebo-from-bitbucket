@@ -9,7 +9,7 @@ if ((typeof GasLog)==='undefined') { // GasL Initialization. (only if not initia
 
 var log = new GasLog({
   ident: 'MikeBo'
-//  , priority: 'INFO'
+  , priority: 'INFO'
   , printer: new GasLog.Printer.Spreadsheet({
     spreadsheet: SpreadsheetApp.getActiveSpreadsheet()
     , sheetName: 'Logs'

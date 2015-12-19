@@ -38,7 +38,7 @@ function bp2Ticket() {
   *
   */
   var DEBUG_SEARCH_PATTERN=false
-//  DEBUG_SEARCH_PATTERN='“船来船网”细分行业B2B项目计划书'
+//  DEBUG_SEARCH_PATTERN='融资申请 259 游学者'
 
   if (DEBUG && DEBUG_SEARCH_PATTERN) {
     log(log.DEBUG, 'DEBUG_SEARCH_PATTERN: ' + DEBUG_SEARCH_PATTERN)
@@ -155,17 +155,19 @@ function processBpThreads(pattern) {
     
     var isNotBp = isNotNewBizPlan(messages)
     
-    log(log.INFO, "BP2Ticket %s: %s from %s to %s because %s."
-        , isNotBp ? 'NotBP' : 'BP' 
-        , messages[0].getSubject().substring(0,30)
-        , messages[0].getReplyTo() || messages[0].getFrom()
-        , messages[0].getTo()
-        , isNotBp ? isNotBp : 'I think so'
-       )
     
     if (isNotBp) {
       thread.addLabel(labelNotBp)
       thread.removeLabel(labelBugBo)
+
+      log(log.INFO, "BP2Ticket %s: %s from %s to %s because %s."
+          , isNotBp ? 'NotBP' : 'BP' 
+          , messages[0].getSubject().substring(0,30)
+          , messages[0].getReplyTo() || messages[0].getFrom()
+      , messages[0].getTo()
+      , isNotBp ? isNotBp : 'I think so'
+      )
+
       continue
     }
   
@@ -174,9 +176,17 @@ function processBpThreads(pattern) {
         
     try {
       // 1. submit to freshdesk
-      addToTicket(thread)
+      var ticket = addToTicket(thread)
       
-      
+      log(log.INFO, "BP2Ticket %s#%s: %s from %s to %s because %s."
+          , isNotBp ? 'NotBP' : 'BP' 
+          , ticket.getId()
+          , messages[0].getSubject().substring(0,30)
+          , messages[0].getReplyTo() || messages[0].getFrom()
+      , messages[0].getTo()
+      , isNotBp ? isNotBp : 'I think so'
+      )
+
       /**
       * 2. trash it.
       * do not keep bp in gmail
@@ -299,7 +309,7 @@ function addToTicket(thread) {
     log(log.INFO, 'attachments dropped. original %s attachments.', Math.floor(attachments.length))
   }
 
-  return createFreshdeskTicket(from, to + ',' + cc, subject, description, pickedAttachments)
+  return newTicket(from, to + ',' + cc, subject, description, pickedAttachments)
  
 }
 
@@ -350,12 +360,12 @@ function isNotNewBizPlan(messages) {
 * new freshdesk ticket!
 *
 */
-function createFreshdeskTicket(from, to, subject, description, attachments) {
+function newTicket(from, to, subject, description, attachments) {
   
   var API_KEY = PropertiesService.getScriptProperties().getProperty('FreshDeskApiKey')
   if (!API_KEY) throw new Error('FreshDeskApiKey not found in script properties.')
   
-  var ENDPOINT = Utilities.formatString('https://%s.freshdesk.com', 'zixia')
+  var MyFreshdesk = new Freshdesk('https://zixia.freshdesk.com/', API_KEY)
 
   /**
   *
@@ -390,107 +400,22 @@ function createFreshdeskTicket(from, to, subject, description, attachments) {
   * make payload for api
   *
   */
-  var payload = [
-    ['helpdesk_ticket[description_html]', description]
-    , ['helpdesk_ticket[subject]', subject]
-    , ['helpdesk_ticket[email]', from]
-    , ['cc_emails', to]
-  ]
-
-  for (var i=0; i<attachments.length; i++) {
-    payload.push(
-      [
-        'helpdesk_ticket[attachments][][resource]'
-        , attachments[i]
-      ]
-    )
-  }
-  
-  var boundary = '-----CUTHEREelH7faHNSXWNi72OTh08zH29D28Zhr3Rif3oupOaDrj'
-  
-  payload = makeMultipartBody(payload, boundary)
-
-  var headers = {
-    'Authorization': 'Basic ' + Utilities.base64Encode(API_KEY + ':X')
-  }
-
-  var options = {
-    contentType: "multipart/form-data; boundary=" + boundary
-    , headers: headers
-    , payload: payload
-    , method: 'post'
-    , muteHttpExceptions: true
-  }
-  
-  /**
-  *
-  * submit to freshdesk API
-  *
-  */
-  var url = ENDPOINT + '/helpdesk/tickets.json'
-//  url = 'http://aka.cn:3333'
-  
-  var response = UrlFetchApp.fetch(url, options)
-  
-  if (response.getResponseCode() != 200) {
-    throw new Error(
-      Utilities.formatString('UrlFetchApp: Freshdesk API failed! code: %s, content: %s'
-                             , response.getResponseCode()
-                             , response.getContentText()
-                            )
-    )
-  }
-}
-
-
-/**
-*
-* helper function
-*
-*/
-function makeMultipartBody(payload, boundary) {
-  
-  var body = Utilities.newBlob('').getBytes()
-  
-  for (var i in payload) {
-    var [k, v] = payload[i]
-    
-    if (v.toString() == 'Blob'
-       || v.toString() == 'GmailAttachment' 
-    ) {
-      
-      // attachment
-      body = body.concat(
-        Utilities.newBlob(
-          '--' + boundary + '\r\n'
-          + 'Content-Disposition: form-data; name="' + k + '"; filename="' + v.getName() + '"\r\n'
-        + 'Content-Type: ' + v.getContentType() + '\r\n\r\n'
-      ).getBytes())
-      
-      body = body
-      .concat(v.getBytes())
-      .concat(Utilities.newBlob('\r\n').getBytes())
-      
-    } else {
-      
-      // string
-      body = body.concat(
-        Utilities.newBlob(
-          '--'+boundary+'\r\n'
-          + 'Content-Disposition: form-data; name="' + k + '"\r\n\r\n'
-          + v + '\r\n'
-        ).getBytes()
-      )
-      
+  var ticketObj = {
+    helpdesk_ticket: {
+      description_html: description
+      , subject: subject
+      , email: from
     }
-  
+    , cc_emails: to
   }
   
-  body = body.concat(Utilities.newBlob('--' + boundary + "--\r\n").getBytes())
+  if (attachments.length) {
+    ticketObj.helpdesk_ticket.attachments = attachments
+  }
   
-  return body
- 
+  return new MyFreshdesk.Ticket(ticketObj)
 }
+
 
 function pickAttachments_(attachments) {
 
