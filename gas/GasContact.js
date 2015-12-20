@@ -15,6 +15,9 @@ var GasContact = (function() {
   GasContact.getEmailName = getEmailName
   GasContact.getEmailAddress = getEmailAddress
   
+  // for test
+  GasContact.binary = binary
+  
   return GasContact
   
   
@@ -38,15 +41,43 @@ var GasContact = (function() {
       for (var i=0; i<values.length; i++) {
         EMAILS.push(values[i][0])
       }
+      
+      EMAILS = EMAILS.sort()
     }
     
-    for (var i=0; i<EMAILS.length; i++) {
-      if (EMAILS[i] == email) {
-        return true
+//    for (var i=0; i<EMAILS.length; i++) {
+////      if (i<5000 && i>4990) {
+////        log(EMAILS[i])
+////      }
+//      
+//      if (EMAILS[i] == email) {
+//        return true
+//      }
+//    }
+
+    var index = binary(EMAILS, email)
+    
+    return index != -1
+  }
+  
+  function binary(list, value)
+  {
+    var left = 0, right = list.length - 1, mid = 0
+    mid = Math.floor((left + right) / 2)
+    while( left < right && list[mid] != value )
+    {
+//      Logger.log('left:'+left+', right:'+right+', mid:'+mid)
+      if (list[mid] < value ) {
+        left = mid + 1
+      } else if( list[mid] > value ) {
+        right = mid - 1;
       }
+      mid = Math.floor((left + right) / 2)
     }
-    
-    return false
+    if( list[mid] == value )
+      return mid
+      
+    return -1
   }
   
   /**
