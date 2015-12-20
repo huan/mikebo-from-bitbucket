@@ -1,10 +1,3 @@
-function testContact() {
-  //  var isKnown = isMyContact('sadfa <zixia@zixia.net>')
-  var n = 'yangjinyu@muche365.com <yangjinyu@muche365.com>, yangjinyu2@muche3652.com <yangjinyu2@muche3652.com>'
-  
-  log(log.INFO, 'isKnown: %s', getEmailName(n)[1])
-}
-
 var GasContact = (function() {
   'use strict'
 
