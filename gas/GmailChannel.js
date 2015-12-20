@@ -1,8 +1,9 @@
-var log = new GasLog()
-
-function processChannel() {
+ 
+function cleanInbox() {
   'use strict'  
   
+  if ((typeof log)==='undefined') eval ('var log = new GasLog()')
+
   if ((typeof GmailChannel)==='undefined') { // GmailChannel Initialization. (only if not initialized yet.)
     eval(UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gas-gmail-channel/master/src/gas-gmail-channel-lib.js?2').getContentText())
     GmailApp.getAliases() // Require permission
@@ -11,23 +12,28 @@ function processChannel() {
   var FRESHDESK_URL = PropertiesService.getScriptProperties().getProperty('FreshdeskDomainUrl')
   var FRESHDESK_KEY = PropertiesService.getScriptProperties().getProperty('FreshdeskApiKey')
   var MyFreshdesk = new Freshdesk(FRESHDESK_URL, FRESHDESK_KEY)
-  
-  var LABEL_BP = 'BizPlan'
-  var LABEL_NOT_BP = 'NotBP'
-  
-  var LABEL_MIKEBO = 'Mike/MikeBo'
-  var LABEL_BUGBO = 'Mike/BugBo'
+
+  var gasContact = new GasContact()
   
   var ID_AGENT_MARY = '5008844005'
   var ID_AGENT_ZIXIA = '5006515033'
   
+  // how many message(s) processed per call
+  var LIMIT = 7
+  // how many day(s) looks back by search 
+  var DAYSPAN = 1
 
-  doZixiaChannel()
-//  doFormChannel()
+  
+  doBpZixiaChannel()      // 1. 同时发给 zixia@pre 和  bp@pre 邮箱
+  doBpWithCipherChannel() // 2. 只发到 bp@pre 邮箱的，但是有我的名字
+  doZixiaChannel()        // 3. 只发到 zixia@pre 邮箱
+  doFormChannel()         // 4. 通过表单提交
 
+  doBulkChannel()         // 5. 群发邮件，并且不是发到我的邮箱的
   
   
   return 
+  
   
   
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,29 +42,88 @@ function processChannel() {
   //
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  function doZixiaChannel() {
+  /**
+  *
+  * 0. Clean bulk emails of inbox
+  *
+  */
+  function doBulkChannel() {
     
-    var zixiaChannel = new GmailChannel({
-      keywords: []
+    var bulkChannel = new GmailChannel ({
+      name: 'bulkChannel'
+      , keywords: []
       , labels: [
         'inbox'
+        , 'unread'
+        , '-' + 'ToBeDeleted'
         , '-' + 'trash'
-        , '-' + LABEL_BP
-        , '-' + LABEL_NOT_BP
-        , '-' + LABEL_BUGBO
       ]
-      , dayspan: 2
-      , query: '("邮箱发来的超大附件" OR "邮箱发来的云附件" OR (filename:pptx OR filename:ppt OR filename:pdf))'
-      + ' ' + '(to:(zixia@pre-angel.com OR zixia@preangelpartners.com) NOT to:(bp@pre-angel.com OR bp@preangelpartners.com))'
+      , dayspan: DAYSPAN
+      , query: '-(zixia OR lizh OR lizhuohuan OR lzhuohuan OR zhuohuan OR 卓桓 OR 李兄 OR 李卓桓 OR 卓恒 OR 李卓恒 OR 李总 OR 李老师 OR 李先生 OR abu OR 阿布 OR bruce OR ceibsmobi.com OR akamobi.com)'
+      + ' ' + '-is:important'
+      + ' ' + '-17salsa'
+      + ' ' + '-融资申请'
+      + ' ' + '-最简单的创业计划书'
       
-      , doneLabel: 'OutOfGmailChannel'
-      , limit: 1
+      , doneLabel: 'OutOfBulkChannel'
+      , limit: LIMIT
       , res: {
         Ticket: MyFreshdesk.Ticket
+        , gasContact: gasContact
       }
     })
     
-//    zixiaChannel = new GmailChannel({
+    log(log.DEBUG, bulkChannel.getName() + ' QUERY_STRING: [' + bulkChannel.getQueryString() + ']')
+
+    bulkChannel.use(
+      logOnStart
+      , labelAdd_Mike
+      , labelAdd_Bug
+      
+      , skipFromMyContacts     
+      , replySubmitGuideIfMailToBpAccount
+      
+      , labelAdd_ToBeDeleted
+      , moveToArchive
+      
+      , labelRemove_Bug
+      , logOnEnd
+    )
+    
+    return bulkChannel.done()
+    
+  }
+
+  
+  /**
+  *
+  * 1. to:bp@pre-angel.com with CIPHER for zixia
+  *
+  */
+  function doBpWithCipherChannel() {
+    
+    // 1. to:bp with CIPHER
+    var bpWithCipherChannel = new GmailChannel({
+      name: 'bpWithCipherChannel'
+      , keywords: []
+      , labels: [
+        'inbox'
+        , '-' + 'trash'
+      ]
+      , dayspan: DAYSPAN
+      , query: '(to:(bp@pre-angel.com OR bp@preangelpartners.com) NOT to:zixia)'
+      + ' ' + '(abu OR 阿布 OR bruce OR zixia OR lizh OR lizhuohuan OR zhuohuan OR 卓桓 OR 李兄 OR 李卓桓 OR 卓恒 OR 李卓恒 OR 李总 OR 李老师 OR 李先生)'
+      + ' ' + '("邮箱发来的超大附件" OR "邮箱发来的云附件" OR (filename:pptx OR filename:ppt OR filename:pdf OR filename:doc))'
+      
+      , doneLabel: 'OutOfGmailChannel'
+      , limit: LIMIT
+      , res: {
+        Ticket: MyFreshdesk.Ticket
+        , gasContact: gasContact
+      }
+    })
+    
+//    bpChannel = new GmailChannel({
 //      query: '天使帮推荐项目- 众趣3D'
 //      , labels: []
 //      , res: {
@@ -66,51 +131,184 @@ function processChannel() {
 //      }
 //    })
     
-    log(zixiaChannel.getQueryString())
+    log(log.DEBUG, bpWithCipherChannel.getName() + ' QUERY_STRING: [' + bpWithCipherChannel.getQueryString() + ']')
+//    log(log.DEBUG, 'debug')
+//    log(log.INFO, 'info')
+//    log(log.NOTICE, 'notice')
     
-    zixiaChannel.use(
+    bpWithCipherChannel.use(
+      logOnStart
+      , labelAdd_Mike
+      , labelAdd_NotBizPlan
       
-      function (req, res, next) {
-        Logger.log('zixia channel: ' + req.thread.getFirstMessageSubject())
-        next()
-      }
-      , labelForStart
-
-      , validateNewBizPlan
+      , skipFromMyContacts
+      , skipInvalidBizPlan
+      
+      , labelRemove_NotBizPlan
+      , labelAdd_BizPlan
+      , labelAdd_Bug
+      
       , summaryBizPlan
       , createTicket
-      , forwardBizplan
-           
+      , trashBizplan
+
+      , labelRemove_Bug
+      , logOnEnd
+    )
+
+    bpWithCipherChannel.done()
+    
+  }
+
+  /**
+  * 2. to:(zixia@pre-angel.com OR bp@pre-angel.com)
+  **/
+  function doBpZixiaChannel() {
+    
+    // 2. to:bp AND to:zixia
+    var bpZixiaChannel = new GmailChannel({
+      name: 'bpZixiaChannel'
+      , keywords: []
+      , labels: [
+        'inbox'
+        , '-' + 'trash'
+      ]
+      , dayspan: DAYSPAN
+      , query: 'to:(zixia@pre-angel.com OR zixia@preangelpartners.com)'
+      + ' ' + 'to:(bp@pre-angel.com OR bp@preangelpartners.com)'
+      + ' ' + 'has:attachment'
+      
+      , doneLabel: 'OutOfGmailChannel'
+      , limit: LIMIT
+      , res: {
+        Ticket: MyFreshdesk.Ticket
+        , gasContact: gasContact
+      }
+    })
+    
+//    bpChannel = new GmailChannel({
+//      query: '天使帮推荐项目- 众趣3D'
+//      , labels: []
+//      , res: {
+//        Ticket: MyFreshdesk.Ticket
+//      }
+//    })
+    
+    log(bpZixiaChannel.getName() + ': ' + bpZixiaChannel.getQueryString())
+    
+    bpZixiaChannel.use(
+      logOnStart
+      , labelAdd_Mike
+      , labelAdd_NotBizPlan
+
+      , skipFromMyContacts
+      , skipInvalidBizPlan
+
+      , labelRemove_NotBizPlan
+      , labelAdd_BizPlan
+      , labelAdd_Bug
+      
+      , summaryBizPlan
+      , createTicket
+      // no need to forward because I have a gmail filter to forward all mails to bp@pre* already
+      // , forwardBizplan          
       , trashBizplan
       
-      , labelForEnd
+      , labelRemove_Bug
+      , logOnEnd
+    )
 
+    bpZixiaChannel.done()
+
+  }
+  
+  /**
+  *
+  * 1. to:zixia@pre-angel.com (ONLY. NOT to:bp@pre-angel.com)
+  *
+  */
+  function doZixiaChannel() {
+    
+    var zixiaChannel = new GmailChannel({
+      name: 'zixiaChannel'
+      , keywords: []
+      , labels: [
+        'inbox'
+        , '-' + 'trash'
+      ]
+      , dayspan: 1
+      , query: '("邮箱发来的超大附件" OR "邮箱发来的云附件" OR (filename:pptx OR filename:ppt OR filename:pdf))'
+      + ' ' + '(to:(zixia@pre-angel.com OR zixia@preangelpartners.com) NOT to:(bp@pre-angel.com OR bp@preangelpartners.com))'
+      
+      , doneLabel: 'OutOfGmailChannel'
+      , limit: 1
+      , res: {
+        Ticket: MyFreshdesk.Ticket
+        , gasContact: gasContact
+      }
+    })
+    
+    zixiaChannel = new GmailChannel({
+      name: 'zixiaChannel'
+      , query: '1217 Bosrado自制真人秀-挑战老板（投资版）'
+      , labels: []
+      , res: {
+        Ticket: MyFreshdesk.Ticket
+        , gasContact: gasContact
+      }
+    })
+    
+    log(log.DEBUG, zixiaChannel.getName() + ' QUERY_STRING: [' + zixiaChannel.getQueryString() + ']')
+    
+    zixiaChannel.use(
+      logOnStart
+      , labelAdd_Mike
+      , labelAdd_NotBizPlan
+
+      , skipFromMyContacts
+      , skipInvalidBizPlan
+
+      , labelRemove_NotBizPlan
+      , labelAdd_BizPlan
+      , labelAdd_Bug
+      
+      , summaryBizPlan
+      , createTicket
+      , forwardBizplan          
+      , trashBizplan
+      
+      , labelRemove_Bug
+      , logOnEnd
     )
     
     zixiaChannel.done()
     
   } 
   
+  /**
+  *
+  * Submit from form
+  *
+  */
   function doFormChannel() {
     
     var formChannel = new GmailChannel({
-      keywords: [
+      name: 'formChannel'
+      , keywords: [
         '融资申请'
         , '最简单的创业计划书'
         , '-abcdefghijklmnopqrstuvwxyz'
       ]
       , labels: [
         , '-trash'
-        , '-'+LABEL_BP
-        , '-'+LABEL_NOT_BP
-        , '-'+LABEL_BUGBO
       ]
-      , dayspan: 3
+      , dayspan: DAYSPAN
       , query: 'to:bp'
       , doneLabel: 'OutOfGmailChannel'
-      , limit: 9
+      , limit: LIMIT
       , res: {
         Ticket: MyFreshdesk.Ticket
+        , gasContact: gasContact
       }
     })
     
@@ -121,26 +319,26 @@ function processChannel() {
     //      Ticket: MyFreshdesk.Ticket
     //    }
     //  })
-    
-    Logger.log(formChannel.getQueryString())
+
+    log(formChannel.getName() + ' QUERY_STRING: [' + formChannel.getQueryString() + ']')
     
     formChannel.use(
-      function (req, res, next) {
-        Logger.log('Subject: ' + req.thread.getFirstMessageSubject())
-        next()
-      }
-      , labelForStart
+      logOnStart
+      , labelAdd_Mike
+      , labelAdd_BizPlan
+      , labelAdd_Bug
       
       , summaryFormBizplan
       , createTicket
-      
+
       , analyzeDetails
       , processTicket
-      
-      , trashBizplan
-      
-      , labelForEnd
-      
+
+      , labelAdd_ToBeDeleted
+      , moveToArchive
+
+      , labelRemove_Bug
+      , logOnEnd
     )
     
     formChannel.done()
@@ -159,10 +357,10 @@ function processChannel() {
   function analyzeDetails(req, res, next) {
     var bizplan = req.bizplan
     var startup = req.startup
-    var message = req.thread.getMessages()[0]
+    var message = req.getThread().getMessages()[0]
     
     if (!bizplan) {
-      log('no bizplan found, cant analyze for [%s]', req.thread.getFirstMessageSubject())
+      log('no bizplan found, cant analyze for [%s]', req.getThread().getFirstMessageSubject())
       return false
     }
     
@@ -247,7 +445,7 @@ function processChannel() {
     var ticket = req.ticket
     
     if (!analyze || !ticket) {
-      log('no analyze or ticket fouond, cant processTicket for [%s]', req.thread.getFirstMessageSubject())
+      log('no analyze or ticket fouond, cant processTicket for [%s]', req.getThread().getFirstMessageSubject())
       return false
     }
     
@@ -307,7 +505,7 @@ function processChannel() {
   }
   
   function summaryFormBizplan(req, res, next) {
-    var messages = req.thread.getMessages()
+    var messages = req.getThread().getMessages()
     var message = messages[0]
     
     var body = message.getBody()
@@ -374,7 +572,7 @@ function processChannel() {
     if (match) startup.web = match[1]
     
     Object.keys(startup).forEach(function (k) {
-      Logger.log(k + '=' + startup[k])
+      log(k + '=' + startup[k])
     })
     
     req.bizplan = {
@@ -393,7 +591,7 @@ function processChannel() {
     
     
     if (!startup.email) {
-      log(log.INFO, 'skipped because no startup.email for %s', startup.name)
+      log(log.NOTICE, 'skipped because no startup.email for %s', startup.name)
       return
     }
     
@@ -427,14 +625,12 @@ function processChannel() {
     })
     
     var fwdMessage
+    var thread = message.getThread()
     
     var ttl = 9
     while (ttl-- > 0) {
-      var threadId = message.getThread().getId()
-      
-      // must use GmailApp getThread, for force reload
-      var thread = GmailApp.getThreadById(threadId)
-      
+      GmailApp.refreshThread(thread)
+             
       log(log.DEBUG, 'forward ttl:%s, message num:%s', ttl, thread.getMessages().length)
       
       messages = thread.getMessages().filter(function(m) {
@@ -461,15 +657,9 @@ function processChannel() {
   *
   *
   */
-  function validateNewBizPlan(req, res, next) {
-    
-    var labelBp = GmailApp.getUserLabelByName(LABEL_BP)
-    var labelNotBp = GmailApp.getUserLabelByName(LABEL_NOT_BP)
-    
-    // consider all email is not bp at first. 
-    req.thread.addLabel(labelNotBp)
-    
-    var messages = req.thread.getMessages()
+  function skipInvalidBizPlan(req, res, next) {
+            
+    var messages = req.getThread().getMessages()
     
     /**
     *
@@ -479,43 +669,37 @@ function processChannel() {
     */
     var from = messages[0].getFrom()
     
+    var isNotBizPlan = false
+    var reason = ''
+    
     for (var i=0; i<messages.length; i++) {
       
       if (/@google.com/.test(messages[i].getFrom()) ) continue
       
-      if (messages[i].isInTrash()) return log('someone have touched this thread.')
+      if (messages[i].isInTrash()) {
+        isNotBizPlan = true
+        reason = 'someone have touched this thread.'
+      }
       
-      if (messages[i].getFrom() != from) return log('not all message sent from one sender.');
+      if (messages[i].getFrom() != from) {
+        isNotBizPlan = true
+        reason = 'not all message sent from one sender.'
+      }
       
     }
     
-    /**
-    *
-    * 3. Do not touch mail from people I known
-    *
-    */
-    if (isMyContact(from)) {
-      return log('isNewBizPlan: ' + from + ' isMyContact.')
+    if (isNotBizPlan) {
+      return log(log.NOTICE, req.getChannelName() + ': is not bizplan because ' + reason)
     }
-    
-    /**
-    *
-    * validate succ. label it & call next
-    *
-    */
-    req.thread.removeLabel(labelNotBp)
-    req.thread.addLabel(labelBp)
     
     next()
   }
   
   
-  
-  
   function summaryBizPlan(req, res, next) {
     
     // the first email from entrepreneur, normaly is BP
-    var message = req.thread.getMessages()[0]
+    var message = req.getThread().getMessages()[0]
     
     var from = message.getReplyTo() || message.getFrom()
     var cc = message.getCc()
@@ -600,7 +784,7 @@ function processChannel() {
       , cc_emails: bizplan.to
     }
     
-    if (bizplan.attachments && bizplan.attachments instanceof Array) {
+    if (bizplan.attachments && bizplan.attachments instanceof Array && bizplan.attachments.length) {
       
       ticketObj.helpdesk_ticket.attachments = []
       
@@ -647,24 +831,25 @@ function processChannel() {
     
   }
   
+  /**
+  * 2. trash it.
+  * do not keep bp in gmail
+  * use a for loop is because: sometimes entrepreneur send their email more than one times.
+  */
   function trashBizplan(req, res, next) {
-    
-    var messages = req.thread.getMessages()
-    
-    /**
-    * 2. trash it.
-    * do not keep bp in gmail
-    * use a for loop is because: sometimes entrepreneur send their email more than one times.
-    */
+    var messages = req.getThread().getMessages()
+    var report = 'trashed message: '
     for (var i=0; i<messages.length; i++) {
       if (messages[i].getFrom() != messages[0].getFrom()) break
       // then the following message(i) is as the same sender as the first one
       messages[i].moveToTrash()
+      report += i + ', '
     }
-    
+    log(log.DEBUG, report)
     next()
-    
   }
+  
+  function moveToArchive(req, res, next) { req.getThread().moveToArchive(); next() }
   
   /*********************************************
   *
@@ -673,7 +858,7 @@ function processChannel() {
   */
   function forwardBizplan(req, res, next) {
     
-    var messages = req.thread.getMessages()
+    var messages = req.getThread().getMessages()
     
     /**
     *
@@ -687,39 +872,29 @@ function processChannel() {
       try {
         var forwardMessage = forwardToZixiaBpGroup(messages[0])
         if (forwardMessage) {
-          log(log.INFO, 'forwarded')
+          log(log.DEBUG, 'forwarded')
           forwardMessage.moveToTrash()
         }
       } catch (e) {
-        log('forwardMessage: ' + e.message)
+        log(log.ERR, 'forwardMessage: ' + e.message)
       }
     }
     
-  }
-  
-  function labelForStart(req, res, next) {
-    
-    // get gmail labels
-    var labelMikeBo = GmailApp.getUserLabelByName(LABEL_MIKEBO)
-    var labelBugBo = GmailApp.getUserLabelByName(LABEL_BUGBO)
-    
-    req.thread.addLabel(labelMikeBo) 
-    
-    // Tag as bug first, remove after confirm success.
-    req.thread.addLabel(labelBugBo) 
-    
     next()
   }
   
-  function labelForEnd(req, res, next) {
-    
-    var labelBugBo = GmailApp.getUserLabelByName(LABEL_BUGBO)
-    
-    req.thread.removeLabel(labelBugBo)
-    
-    next()
-  }
+  function labelAdd_BizPlan(req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('BizPlan')); next() }
+  function labelAdd_ToBeDeleted(req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('ToBeDeleted')); next() }
   
+  function labelAdd_NotBizPlan(req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('NotBizPlan')); next() }
+  function labelRemove_NotBizPlan(req, res, next) { req.getThread().removeLabel(GmailApp.getUserLabelByName('NotBizPlan')); next() }
+
+  function labelAdd_Mike(req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('Mike/MikeBo')); next() }
+  function labelRemove_Mike(req, res, next) { req.getThread().removeLabel(GmailApp.getUserLabelByName('Mike/MikeBo')); next() }
+ 
+  function labelAdd_Bug(req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('Mike/BugBo')); next() }
+  function labelRemove_Bug(req, res, next) { req.getThread().removeLabel(GmailApp.getUserLabelByName('Mike/BugBo')); next() }
+
   function isBeijingMobile(mobile) {
     
     var SEARCH_URL = 'https://tcc.taobao.com/cc/json/mobile_tel_segment.htm?tel='
@@ -733,4 +908,76 @@ function processChannel() {
 //    Logger.log(response.getContentText('GBK'))
     return /北京/.test(response.getContentText('GBK'))
   }
+  
+  function logOnStart(req, res, next) {
+    req.beginTime = new Date()
+    log(req.getChannelName() + ' begin of processing ' + req.getThread().getFirstMessageSubject())
+    next()
+  }
+
+  function logOnEnd(req, res, next) {
+    log(req.getChannelName() + ' end of processing ' + req.getThread().getFirstMessageSubject())
+    log(req.getChannelName() + ' time cost: ' + Math.floor((new Date() - req.beginTime)/1000) + 's' )
+    next()
+  }
+
+  /**
+  *
+  * 3. Do not touch mail from people I known
+  *
+  */
+  function skipFromMyContacts(req, res, next) {
+
+    if (!res.gasContact) throw Error('res.gasContact not found!')
+    
+    var firstMessage = req.getThread().getMessages()[0]
+    
+    var from = firstMessage.getReplyTo() || firstMessage.getFrom()
+      
+    if (res.gasContact.isMyContact(from)) {
+      return log(req.getChannelName() + ': ' + from + ' isMyContact.')
+    } 
+    return next()
+  }
+  
+  function replySubmitGuideIfMailToBpAccount(req, res, next) {
+    
+    var message = req.getThread().getMessages()[0]
+    var to = message.getTo()   
+    
+    if (/bp@pre/i.test(to)) {
+      replySubmitGuide(message)
+    }
+    
+    next()
+  }
+  
+  /**************************************************************************
+  *
+  * Helper 2 - Reply BP
+  *
+  */
+  function replySubmitGuide(message) {
+    
+    //  log(log.INFO, 'reply submit guide')
+    
+    var from = message.getFrom()
+    var name = GasContact.getEmailName(from)
+    
+    var t = HtmlService.createTemplateFromFile('AutoReply')
+    t.name = name
+    var htmlReply = t.evaluate().getContent()
+    
+    //  var plainBody = plainForwardBody + message.getPlainBody()
+    var htmlBody = htmlReply + '<blockquote>' + message.getBody() + '</blockquote>'
+    
+    message.reply(null, {
+      //    from: 'support@zixia.freshdesk.com'
+      from: 'bp@pre-angel.com'
+      , name: '李卓桓(PreAngel)'
+      , htmlBody: htmlBody
+    })
+    
+  }  
+ 
 }

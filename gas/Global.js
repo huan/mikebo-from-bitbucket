@@ -9,7 +9,8 @@ if ((typeof GasLog)==='undefined') { // GasL Initialization. (only if not initia
 
 var log = new GasLog({
   ident: 'MikeBo'
-  , priority: 'INFO'
+//  , priority: 'INFO'
+  , priority: 'DEBUG'
   , printer: new GasLog.Printer.Spreadsheet({
     spreadsheet: SpreadsheetApp.getActiveSpreadsheet()
     , sheetName: 'Logs'
@@ -46,3 +47,13 @@ function getSheet(name) {
 if ((typeof Freshdesk)==='undefined') { // GasFreshdesk Initialization. (only if not initialized yet.)
   eval(UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gas-freshdesk/master/src/gas-freshdesk-lib.js').getContentText())
 } // Class Freshdesk is ready for use now!
+
+
+/**
+*
+* 4. Reload Contacts
+*
+*/
+function reloadContacts() {
+  return GasContact.reloadContacts()
+}
