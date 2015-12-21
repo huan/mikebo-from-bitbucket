@@ -9,8 +9,9 @@ if ((typeof GasLog)==='undefined') { // GasL Initialization. (only if not initia
 
 var log = new GasLog({
   ident: 'MikeBo'
+  , priority: 'NOTICE'
 //  , priority: 'INFO'
-  , priority: 'DEBUG'
+//  , priority: 'DEBUG'
   , printer: new GasLog.Printer.Spreadsheet({
     spreadsheet: SpreadsheetApp.getActiveSpreadsheet()
     , sheetName: 'Logs'
@@ -51,7 +52,7 @@ if ((typeof Freshdesk)==='undefined') { // GasFreshdesk Initialization. (only if
 
 /**
 *
-* 4. Reload Contacts
+* 4. Export Reload Contacts Function
 *
 */
 function reloadContacts() {

@@ -1,8 +1,8 @@
 function testPerformance() {
   var c = new GasContact()
   
-  var num = 1000
-  var email = 'xy510@vip.sina.com'
+  var num = 10
+  var email = 'xyjj510@vip.sina.com'
   
   var startTime = new Date()
   

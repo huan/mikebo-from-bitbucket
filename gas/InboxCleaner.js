@@ -18,11 +18,23 @@ function cleanInbox() {
   var ID_AGENT_MARY = '5008844005'
   var ID_AGENT_ZIXIA = '5006515033'
   
-  // how many message(s) processed per call
-  var LIMIT = 7
-  // how many day(s) looks back by search 
+  /**
+  *
+  * LIMIT: how many message(s) processed per call
+  * DAYSPAN: how many day(s) looks back by search 
+  *
+  */
   var DAYSPAN = 1
+  var LIMIT   = 7
 
+
+  var startTime = new Date()
+  log(log.DEBUG, 'InboxCleaner starting...')
+
+  ///////////////////////////////////////////////////////////////////////////
+  //
+  // Start Cleaning
+  
   
   doBpZixiaChannel()      // 1. 同时发给 zixia@pre 和  bp@pre 邮箱
   doBpWithCipherChannel() // 2. 只发到 bp@pre 邮箱的，但是有我的名字
@@ -32,7 +44,17 @@ function cleanInbox() {
   doBulkChannel()         // 5. 群发邮件，并且不是发到我的邮箱的
   
   
-  return 
+  // End Cleaning
+  //
+  ////////////////////////////////////////////////////////////////////////////
+  
+  var endTime = new Date()
+  var totalTime = endTime - startTime
+  
+  var totalSeconds = Math.floor(totalTime/1000)
+  
+  return log(log.INFO, 'InboxCleaner runned(%ss)', totalSeconds)
+
   
   
   
@@ -73,15 +95,35 @@ function cleanInbox() {
       }
     })
     
+    // DEBUG
+//    bulkChannel = new GmailChannel ({
+//      name: 'bulkChannel'
+//      , keywords: []
+//      , labels: [
+//        'inbox'
+//        , '-' + 'ToBeDeleted'
+//        , '-' + 'trash'
+//      ]
+//      , query: '企业如何获得政府财税支持'
+//      , doneLabel: 'OutOfBulkChannel'
+//      , limit: 1
+//      , res: {
+//        Ticket: MyFreshdesk.Ticket
+//        , gasContact: gasContact
+//      }
+//    })
+    
+    
     log(log.DEBUG, bulkChannel.getName() + ' QUERY_STRING: [' + bulkChannel.getQueryString() + ']')
 
     bulkChannel.use(
       logOnStart
       , labelAdd_Mike
-      , labelAdd_Bug
       
-      , skipFromMyContacts     
-      , replySubmitGuideIfMailToBpAccount
+      , skipFromMyContacts
+      , labelAdd_Bug
+
+      , replySubmitGuideIfMailToBpAddress
       
       , labelAdd_ToBeDeleted
       , moveToArchive
@@ -194,7 +236,7 @@ function cleanInbox() {
 //      }
 //    })
     
-    log(bpZixiaChannel.getName() + ': ' + bpZixiaChannel.getQueryString())
+    log(log.DEBUG, bpZixiaChannel.getName() + ' QUERY_STRING: ' + bpZixiaChannel.getQueryString())
     
     bpZixiaChannel.use(
       logOnStart
@@ -248,15 +290,15 @@ function cleanInbox() {
       }
     })
     
-    zixiaChannel = new GmailChannel({
-      name: 'zixiaChannel'
-      , query: '1217 Bosrado自制真人秀-挑战老板（投资版）'
-      , labels: []
-      , res: {
-        Ticket: MyFreshdesk.Ticket
-        , gasContact: gasContact
-      }
-    })
+//    zixiaChannel = new GmailChannel({
+//      name: 'zixiaChannel'
+//      , query: '1217 Bosrado自制真人秀-挑战老板（投资版）'
+//      , labels: []
+//      , res: {
+//        Ticket: MyFreshdesk.Ticket
+//        , gasContact: gasContact
+//      }
+//    })
     
     log(log.DEBUG, zixiaChannel.getName() + ' QUERY_STRING: [' + zixiaChannel.getQueryString() + ']')
     
@@ -320,7 +362,7 @@ function cleanInbox() {
     //    }
     //  })
 
-    log(formChannel.getName() + ' QUERY_STRING: [' + formChannel.getQueryString() + ']')
+    log(log.DEBUG, formChannel.getName() + ' QUERY_STRING: [' + formChannel.getQueryString() + ']')
     
     formChannel.use(
       logOnStart
@@ -360,7 +402,7 @@ function cleanInbox() {
     var message = req.getThread().getMessages()[0]
     
     if (!bizplan) {
-      log('no bizplan found, cant analyze for [%s]', req.getThread().getFirstMessageSubject())
+      log(log.ERR, 'no bizplan found, cant analyze for [%s]', req.getThread().getFirstMessageSubject())
       return false
     }
     
@@ -572,7 +614,7 @@ function cleanInbox() {
     if (match) startup.web = match[1]
     
     Object.keys(startup).forEach(function (k) {
-      log(k + '=' + startup[k])
+      log(log.DEBUG, k + '=' + startup[k])
     })
     
     req.bizplan = {
@@ -625,16 +667,25 @@ function cleanInbox() {
     })
     
     var fwdMessage
-    var thread = message.getThread()
     
     var ttl = 9
     while (ttl-- > 0) {
-      GmailApp.refreshThread(thread)
+      
+      var threadId = message.getThread().getId()
+     
+      // GmailApp.refreshThread(thread) not work???
+      // must use GmailApp getThread, for force reload
+      var thread = GmailApp.getThreadById(threadId)
              
       log(log.DEBUG, 'forward ttl:%s, message num:%s', ttl, thread.getMessages().length)
       
       messages = thread.getMessages().filter(function(m) {
-        return (!m.isInTrash() && 'zixia@zixia.net' == m.getFrom() && ZIXIABPGROUP == m.getTo())
+        return 
+        ( 
+          !m.isInTrash() 
+          && 'zixia@zixia.net' == m.getFrom() 
+          && ZIXIABPGROUP == m.getTo()
+        )
       })
       
       if (messages.length > 0) {
@@ -689,7 +740,12 @@ function cleanInbox() {
     }
     
     if (isNotBizPlan) {
-      return log(log.NOTICE, req.getChannelName() + ': is not bizplan because ' + reason)
+      return log(log.NOTICE
+                 , '%s[%s]: is not bizplan because %s'
+                 , req.getChannelName()
+                 , req.getThread().getFirstMessageSubject()
+                 , reason
+                )
     }
     
     next()
@@ -849,7 +905,6 @@ function cleanInbox() {
     next()
   }
   
-  function moveToArchive(req, res, next) { req.getThread().moveToArchive(); next() }
   
   /*********************************************
   *
@@ -884,7 +939,6 @@ function cleanInbox() {
   }
   
   function labelAdd_BizPlan(req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('BizPlan')); next() }
-  function labelAdd_ToBeDeleted(req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('ToBeDeleted')); next() }
   
   function labelAdd_NotBizPlan(req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('NotBizPlan')); next() }
   function labelRemove_NotBizPlan(req, res, next) { req.getThread().removeLabel(GmailApp.getUserLabelByName('NotBizPlan')); next() }
@@ -894,6 +948,11 @@ function cleanInbox() {
  
   function labelAdd_Bug(req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('Mike/BugBo')); next() }
   function labelRemove_Bug(req, res, next) { req.getThread().removeLabel(GmailApp.getUserLabelByName('Mike/BugBo')); next() }
+
+  function labelAdd_ToBeDeleted(req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('ToBeDeleted')); next() }
+
+  function moveToArchive(req, res, next) { req.getThread().moveToArchive(); next() }
+
 
   function isBeijingMobile(mobile) {
     
@@ -910,14 +969,20 @@ function cleanInbox() {
   }
   
   function logOnStart(req, res, next) {
-    req.beginTime = new Date()
-    log(req.getChannelName() + ' begin of processing ' + req.getThread().getFirstMessageSubject())
+    req.startTime = new Date()
+    log(log.DEBUG, '%s start processing %s'
+        , req.getChannelName()
+        , req.getThread().getFirstMessageSubject()
+       )
     next()
   }
 
   function logOnEnd(req, res, next) {
-    log(req.getChannelName() + ' end of processing ' + req.getThread().getFirstMessageSubject())
-    log(req.getChannelName() + ' time cost: ' + Math.floor((new Date() - req.beginTime)/1000) + 's' )
+    log(log.NOTICE, '%s finish processed(%ss) %s'
+        , req.getChannelName()  
+        , Math.floor((new Date() - req.startTime)/1000)
+        , req.getThread().getFirstMessageSubject()
+    )
     next()
   }
 
@@ -927,20 +992,19 @@ function cleanInbox() {
   *
   */
   function skipFromMyContacts(req, res, next) {
-
     if (!res.gasContact) throw Error('res.gasContact not found!')
     
     var firstMessage = req.getThread().getMessages()[0]
     
     var from = firstMessage.getReplyTo() || firstMessage.getFrom()
-      
+    
     if (res.gasContact.isMyContact(from)) {
-      return log(req.getChannelName() + ': ' + from + ' isMyContact.')
+      return log(log.DEBUG, req.getChannelName() + ': skipped my contact' + from)
     } 
     return next()
   }
   
-  function replySubmitGuideIfMailToBpAccount(req, res, next) {
+  function replySubmitGuideIfMailToBpAddress(req, res, next) {
     
     var message = req.getThread().getMessages()[0]
     var to = message.getTo()   

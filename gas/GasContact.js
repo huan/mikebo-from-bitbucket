@@ -39,22 +39,14 @@ var GasContact = (function() {
       values = emailRange.getValues()
     
       for (var i=0; i<values.length; i++) {
-        EMAILS.push(values[i][0])
+        // very important for compare as string!
+        var stringValue = values[i][0].toString()
+        EMAILS.push(stringValue)
       }
       
       EMAILS = EMAILS.sort()
     }
     
-//    for (var i=0; i<EMAILS.length; i++) {
-////      if (i<5000 && i>4990) {
-////        log(EMAILS[i])
-////      }
-//      
-//      if (EMAILS[i] == email) {
-//        return true
-//      }
-//    }
-
     var index = binary(EMAILS, email)
     
     return index != -1
@@ -62,11 +54,15 @@ var GasContact = (function() {
   
   function binary(list, value)
   {
+    // very important for compare as string!
+    if ((typeof value)!='string') value = value.toString()
+    
     var left = 0, right = list.length - 1, mid = 0
     mid = Math.floor((left + right) / 2)
     while( left < right && list[mid] != value )
     {
-//      Logger.log('left:'+left+', right:'+right+', mid:'+mid)
+//      log('left:'+left+', right:'+right+', mid:'+mid+', value:'+value)
+//      log('left:'+list[left]+', right:'+list[right]+', mid:'+list[mid])  
       if (list[mid] < value ) {
         left = mid + 1
       } else if( list[mid] > value ) {
@@ -77,9 +73,9 @@ var GasContact = (function() {
     if( list[mid] == value )
       return mid
       
-    return -1
+      return -1
   }
-  
+
   /**
   *
   * get all contacts from google, then save emails to a sheet cache.
