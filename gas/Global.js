@@ -4,7 +4,18 @@
 *
 */
 if ((typeof GasLog)==='undefined') { // GasL Initialization. (only if not initialized yet.)
-  eval(UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gasl/master/src/gas-log-lib.js').getContentText())
+  var TTL = 3
+  var CODE = undefined
+  while (!CODE && TTL-->0) {
+    try {
+      CODE = UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gasl/master/src/gas-log-lib.js').getContentText()
+    } catch (e) {
+      log(log.ERR, 'UrlFetchApp.fetch exception: %s', e.message)
+    }
+  }
+  if (CODE) {
+    eval(CODE)
+  } 
 } // Class GasLog is ready for use now!
 
 var log = new GasLog({
@@ -46,7 +57,18 @@ function getSheet(name) {
 *
 */
 if ((typeof Freshdesk)==='undefined') { // GasFreshdesk Initialization. (only if not initialized yet.)
-  eval(UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gas-freshdesk/master/src/gas-freshdesk-lib.js').getContentText())
+  var TTL = 3
+  var CODE = undefined
+  while (!CODE && TTL-->0) {
+    try {
+      CODE = UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gas-freshdesk/master/src/gas-freshdesk-lib.js').getContentText()
+    } catch (e) {
+      log(log.ERR, 'UrlFetchApp.fetch exception: %s', e.message)
+    }
+  }
+  if (CODE) {
+    eval(CODE)
+  } 
 } // Class Freshdesk is ready for use now!
 
 

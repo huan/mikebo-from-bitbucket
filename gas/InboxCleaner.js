@@ -5,8 +5,19 @@ function cleanInbox() {
   if ((typeof log)==='undefined') eval ('var log = new GasLog()')
 
   if ((typeof GmailChannel)==='undefined') { // GmailChannel Initialization. (only if not initialized yet.)
-    eval(UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gas-gmail-channel/master/src/gas-gmail-channel-lib.js?2').getContentText())
-    GmailApp.getAliases() // Require permission
+    var TTL = 3
+    var CODE = undefined
+    while (!CODE && TTL-->0) {
+      try {
+        CODE = UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gas-gmail-channel/master/src/gas-gmail-channel-lib.js?2').getContentText()
+      } catch (e) {
+        log(log.ERR, 'UrlFetchApp.fetch exception: %s', e.message)
+      }
+    }
+    if (CODE) {
+      eval(CODE)
+      GmailApp.getAliases() // Require permission
+    }
   } // Class GmailChannel is ready for use now!
 
   var FRESHDESK_URL = PropertiesService.getScriptProperties().getProperty('FreshdeskDomainUrl')
@@ -192,6 +203,7 @@ function cleanInbox() {
       
       , summaryBizPlan
       , createTicket
+      , processTicket
       , trashBizplan
 
       , labelRemove_Bug
@@ -252,6 +264,7 @@ function cleanInbox() {
       
       , summaryBizPlan
       , createTicket
+      , processTicket
       // no need to forward because I have a gmail filter to forward all mails to bp@pre* already
       // , forwardBizplan          
       , trashBizplan
@@ -316,6 +329,7 @@ function cleanInbox() {
       
       , summaryBizPlan
       , createTicket
+      , processTicket
       , forwardBizplan          
       , trashBizplan
       
@@ -491,58 +505,46 @@ function cleanInbox() {
       return false
     }
     
-    if (!analyze.zixia) {
+    if (!req.memo) req.memo = ''
+    
+    if (!analyze) {
+      
+      req.memo = '未分析\n' + req.memo
+      ticket.lowPriority()
+      ticket.assign(ID_AGENT_MARY)
+      
+    } else if(!analyze.zixia) {
       
       if (!analyze.beijing) {
-        ticket.note({
-          helpdesk_note: {
-            body: '非北京\n' + (req.memo || '')
-            , private: true
-          }
-        })
+        req.memo = '非北京\n' + req.memo
         ticket.close()
       } else if (analyze.game) {
-        ticket.note({
-          helpdesk_note: {
-            body: '游戏\n' + (req.memo || '')
-            , private: true
-          }
-        })
+        req.memo = '游戏\n' + req.memo
         ticket.close()      
       } else if (analyze.offline) {
-        ticket.note({
-          helpdesk_note: {
-            body: '电商/O2O\n' + (req.memo || '')
-            , private: true
-          }
-        })
+        req.memo =  '电商/O2O\n' + req.memo
         ticket.close()
       } else {
-        
-        ticket.note({
-          helpdesk_note: {
-            body: '内容分析结果未知\n' + (req.memo || '')
-            , private: true
-          }
-        })
+        req.memo = '内容分析结果未知\n' + req.memo
         ticket.lowPriority()
-        ticket.assign(ID_AGENT_MARY)
-        
+        ticket.assign(ID_AGENT_MARY) 
       }
       
     } else { // is to zixia
       
-      ticket.note({
-        helpdesk_note: {
-          body: '是投递给zixia的\n' + (req.memo || '')
-          , private: true
-        }
-      })
+      req.memo = '是投递给zixia的\n' + req.memo
       ticket.mediumPriority()
       ticket.assign(ID_AGENT_MARY)
       
     }
     
+    ticket.note({
+      helpdesk_note: {
+        body: req.memo
+        , private: true
+      }
+    })
+
     next()
   }
   
@@ -776,7 +778,7 @@ function cleanInbox() {
     
     req.bizplan = {
       from: from
-      , to: to + ',' + cc
+      , to: to // + ',' + cc
       , subject: subject
       , description: description
       , attachments: pickedAttachments
@@ -837,7 +839,7 @@ function cleanInbox() {
         , subject: bizplan.subject
         , email: bizplan.from
       }
-      , cc_emails: bizplan.to
+//      , cc_emails: bizplan.to
     }
     
     if (bizplan.attachments && bizplan.attachments instanceof Array && bizplan.attachments.length) {
@@ -982,7 +984,7 @@ function cleanInbox() {
         , req.getChannelName()  
         , Math.floor((new Date() - req.startTime)/1000)
         , req.getThread().getFirstMessageSubject()
-    )
+       )
     next()
   }
 
