@@ -46,6 +46,7 @@ function cleanInbox() {
   //
   // Start Cleaning
   
+//  return doIntviuChannel()       // 7. 橙云面试视频(IntViu)
   
   doBpZixiaChannel()      // 1. 同时发给 zixia@pre 和  bp@pre 邮箱
   doBpWithCipherChannel() // 2. 只发到 bp@pre 邮箱的，但是有我的名字
@@ -53,6 +54,8 @@ function cleanInbox() {
   doFormChannel()         // 4. 通过表单提交
 
   doBulkChannel()         // 5. 群发邮件，并且不是发到我的邮箱的
+  
+  doApplyChannel()        // 6. PreAngel申请表（MikeCRM）
   
   
   // End Cleaning
@@ -83,7 +86,7 @@ function cleanInbox() {
   function doBulkChannel() {
     
     var bulkChannel = new GmailChannel ({
-      name: 'bulkChannel'
+      name: 'bulk'
       , keywords: []
       , labels: [
         'inbox'
@@ -140,10 +143,9 @@ function cleanInbox() {
       , moveToArchive
       
       , labelRemove_Bug
-      , logOnEnd
     )
     
-    return bulkChannel.done()
+    return bulkChannel.done(logOnEnd)
     
   }
 
@@ -157,7 +159,7 @@ function cleanInbox() {
     
     // 1. to:bp with CIPHER
     var bpWithCipherChannel = new GmailChannel({
-      name: 'bpWithCipherChannel'
+      name: 'bpWithCipher'
       , keywords: []
       , labels: [
         'inbox'
@@ -168,7 +170,7 @@ function cleanInbox() {
       + ' ' + '(abu OR 阿布 OR bruce OR zixia OR lizh OR lizhuohuan OR zhuohuan OR 卓桓 OR 李兄 OR 李卓桓 OR 卓恒 OR 李卓恒 OR 李总 OR 李老师 OR 李先生)'
       + ' ' + '("邮箱发来的超大附件" OR "邮箱发来的云附件" OR (filename:pptx OR filename:ppt OR filename:pdf OR filename:doc))'
       
-      , doneLabel: 'OutOfGmailChannel'
+      , doneLabel: 'OutOfBpCipherChannel'
       , limit: LIMIT
       , res: {
         Ticket: MyFreshdesk.Ticket
@@ -207,10 +209,9 @@ function cleanInbox() {
       , trashBizplan
 
       , labelRemove_Bug
-      , logOnEnd
     )
 
-    bpWithCipherChannel.done()
+    bpWithCipherChannel.done(logOnEnd)
     
   }
 
@@ -221,7 +222,7 @@ function cleanInbox() {
     
     // 2. to:bp AND to:zixia
     var bpZixiaChannel = new GmailChannel({
-      name: 'bpZixiaChannel'
+      name: 'bpZixia'
       , keywords: []
       , labels: [
         'inbox'
@@ -232,7 +233,7 @@ function cleanInbox() {
       + ' ' + 'to:(bp@pre-angel.com OR bp@preangelpartners.com)'
       + ' ' + 'has:attachment'
       
-      , doneLabel: 'OutOfGmailChannel'
+      , doneLabel: 'OutOfBpZixiaChannel'
       , limit: LIMIT
       , res: {
         Ticket: MyFreshdesk.Ticket
@@ -270,10 +271,9 @@ function cleanInbox() {
       , trashBizplan
       
       , labelRemove_Bug
-      , logOnEnd
     )
 
-    bpZixiaChannel.done()
+    bpZixiaChannel.done(logOnEnd)
 
   }
   
@@ -285,7 +285,7 @@ function cleanInbox() {
   function doZixiaChannel() {
     
     var zixiaChannel = new GmailChannel({
-      name: 'zixiaChannel'
+      name: 'zixia'
       , keywords: []
       , labels: [
         'inbox'
@@ -295,7 +295,7 @@ function cleanInbox() {
       , query: '("邮箱发来的超大附件" OR "邮箱发来的云附件" OR (filename:pptx OR filename:ppt OR filename:pdf))'
       + ' ' + '(to:(zixia@pre-angel.com OR zixia@preangelpartners.com) NOT to:(bp@pre-angel.com OR bp@preangelpartners.com))'
       
-      , doneLabel: 'OutOfGmailChannel'
+      , doneLabel: 'OutOfZixiaChannel'
       , limit: 1
       , res: {
         Ticket: MyFreshdesk.Ticket
@@ -334,10 +334,9 @@ function cleanInbox() {
       , trashBizplan
       
       , labelRemove_Bug
-      , logOnEnd
     )
     
-    zixiaChannel.done()
+    zixiaChannel.done(logOnEnd)
     
   } 
   
@@ -349,7 +348,7 @@ function cleanInbox() {
   function doFormChannel() {
     
     var formChannel = new GmailChannel({
-      name: 'formChannel'
+      name: 'form'
       , keywords: [
         '融资申请'
         , '最简单的创业计划书'
@@ -360,7 +359,7 @@ function cleanInbox() {
       ]
       , dayspan: DAYSPAN
       , query: 'to:bp'
-      , doneLabel: 'OutOfGmailChannel'
+      , doneLabel: 'OutOfFormChannel'
       , limit: LIMIT
       , res: {
         Ticket: MyFreshdesk.Ticket
@@ -394,13 +393,55 @@ function cleanInbox() {
       , moveToArchive
 
       , labelRemove_Bug
-      , logOnEnd
     )
     
-    formChannel.done()
+    formChannel.done(logOnEnd)
     
   }   
   
+  /**
+  *
+  * Submit from MikeCRM
+  *
+  */
+  function doApplyChannel() {
+        
+    var applyChannel = new GmailChannel({
+      name: 'apply'
+      , keywords: [
+        'PreAngel申请表 '
+      ]
+      , labels: [
+        , '-trash'
+      ]
+      , dayspan: DAYSPAN
+      , query: 'from:mikecrm.com to:(zixia OR bp)'
+      , doneLabel: 'OutOfApplyChannel'
+      , limit: LIMIT
+      , res: {
+        Ticket: MyFreshdesk.Ticket
+//        , Contact: MyFreshdesk.Contact
+        , gasContact: gasContact
+      }
+    })
+    
+    log(log.DEBUG, applyChannel.getName() + ' QUERY_STRING: [' + applyChannel.getQueryString() + ']')
+    
+    applyChannel.use(
+      logOnStart
+      , labelAdd_Mike
+      , labelAdd_Bug
+
+      , parseApplyFromMikeCrm
+      , attachApplyToTicket
+
+      , moveToArchive
+      , labelRemove_Bug
+    )
+    
+    applyChannel.done(logOnEnd)
+    
+  }   
   
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -410,13 +451,115 @@ function cleanInbox() {
   *
   */ 
   
+  function attachApplyToTicket(req, res, next) {
+    
+    var Ticket = res.Ticket
+//    var Contact = res.Contact
+    if (!Ticket /*|| !Contact*/) throw Error('no Ticket or Contact class found!')
+    
+    var apply = req.apply
+    var applyHtml = req.applyHtml
+    
+    var tickets = Ticket.list({ email: apply.email })
+    
+    var ticket
+    if (tickets && tickets.length) {
+      ticket = tickets[tickets.length-1]
+    }
+    
+    /**
+    * existing ticket
+    */
+    if (ticket) { 
+      ticket.note({
+        helpdesk_note: {
+          body_html: applyHtml
+          , private: true
+        }
+      })
+      ticket.open()
+      req.errors.push('attached apply to ticket#' + ticket.getId())
+      
+    } else { // new ticket
+      
+      ticket = new Ticket({
+        helpdesk_ticket: {
+          description_html: applyHtml
+          , subject: apply.company
+          , email: apply.name + '<' + apply.email + '>'
+        }
+      })
+      req.errors.push('created apply to ticket#' + ticket.getId())
+                    
+    }
+    
+    ticket.mediumPriority()
+    ticket.assign(ID_AGENT_ZIXIA)
+    
+
+    next()
+  }
+  
+  function parseApplyFromMikeCrm(req, res, next) {
+    var message = req.getThread().getMessages()[0]
+    
+    var body = message.getBody()
+    
+    var match = /(<table><tbody>[\s\S]+<\/tbody><\/table>)/i.exec(body)
+    
+    if (!match) {
+      return req.errors.push('attachApplyToTicket failed to extract info from [%s]', message.getSubject())
+    }
+    var tableHtml = match[1]
+    .replace(/<wbr>/ig, '')
+    
+    var RE = /([^<>]+?)<\/p><\/td><\/tr><tr[\s\S]+?>([^<>]+?)<\/div><\/td><\/tr><\/tbody><\/table>/gi
+    var FORM_TABLE = {}
+    while (match=RE.exec(tableHtml)) {
+      var header = match[1]
+      var description = match[2]
+      
+//      Logger.log(header + ':' + description)
+      FORM_TABLE[header] = description
+    }
+    
+    function getValue(keyword) {
+      var keys = Object.keys(FORM_TABLE)
+      for (var i=0; i<keys.length; i++) {
+        var key = keys[i]
+        var re = new RegExp(keyword, 'i')
+        if (re.test(key)) {
+          return FORM_TABLE[key]
+        }
+      }
+      return ''
+    }
+    
+    
+    var apply = {
+      name: getValue('姓名')
+      , email: getValue('Email')
+      , company: getValue('公司')
+    }
+    
+    match = /mailto:([^@]+?@[^@]+?)['"]/.exec(apply.email)
+    if (match) apply.email = match[1]
+    
+    req.apply = apply
+    req.applyHtml = tableHtml
+    
+    next()
+  }
+  
+  
   function analyzeDetails(req, res, next) {
     var bizplan = req.bizplan
     var startup = req.startup
     var message = req.getThread().getMessages()[0]
     
     if (!bizplan) {
-      log(log.ERR, 'no bizplan found, cant analyze for [%s]', req.getThread().getFirstMessageSubject())
+      req.errors.push('no bizplan found, cant analyze for [' + req.getThread().getFirstMessageSubject() + ']')
+//      log(log.ERR, 'no bizplan found, cant analyze for [%s]', req.getThread().getFirstMessageSubject())
       return false
     }
     
@@ -441,6 +584,7 @@ function cleanInbox() {
       , '李老师'
       , '李先生'
       , 'PABP'
+      , 'MIKEBO'
     ]
     var zixiaCiphersRe = new RegExp(zixiaCiphers.join('|'), 'i')
     
@@ -454,6 +598,10 @@ function cleanInbox() {
        )
       ) isToZixia = true;
     
+    if (startup && startup.deliverTo) {
+      if (!/李卓桓|无所谓/.test(startup.deliverTo)) isToZixia = false
+    }
+        
     // isToZixia
     //
     /////////////////////////////////////////
@@ -469,16 +617,22 @@ function cleanInbox() {
 //    log('startup: ' + startup)
 //
 //    log('isBeijing: ' + isBeijing)    
-
+  
     if (startup) {
       if (/北京|beijing|中关村|海淀/i.test(startup.address + startup.company)) isBeijing = true
-      if (isBeijingMobile(startup.mobile)) {
+      if (GasContact.isBeijingMobile(startup.mobile)) {
         isBeijing = true
       } else {
-        req.memo = (req.memo||'') + ' 手机号码非北京 '
+        req.errors.push('手机号码非北京')
       }
-      if (/电商|O2O/i.test(startup.name + startup.description + startup.problem)) isOffline = true
-      if (/游戏/.test(startup.name + startup.description + startup.problem)) isGame = true
+      if (/电商|O2O/i.test(startup.name + startup.description + startup.problem)) {
+        isOffline = true
+        req.errors.push('电商/O2O方向')
+      }
+      if (/游戏/.test(startup.name + startup.description + startup.problem)) {
+        isGame = true
+        req.errors.push('游戏方向')
+      }
     }
 
     // positioning
@@ -499,52 +653,56 @@ function cleanInbox() {
     
     var analyze = req.analyze
     var ticket = req.ticket
+    var bizplan = req.bizplan
+
+    var noteMsg = ''
     
-    if (!analyze || !ticket) {
-      log('no analyze or ticket fouond, cant processTicket for [%s]', req.getThread().getFirstMessageSubject())
-      return false
-    }
-    
-    if (!req.memo) req.memo = ''
-    
-    if (!analyze) {
+    if (analyze) {
       
-      req.memo = '未分析\n' + req.memo
-      ticket.lowPriority()
-      ticket.assign(ID_AGENT_MARY)
-      
-    } else if(!analyze.zixia) {
-      
-      if (!analyze.beijing) {
-        req.memo = '非北京\n' + req.memo
-        ticket.close()
-      } else if (analyze.game) {
-        req.memo = '游戏\n' + req.memo
-        ticket.close()      
-      } else if (analyze.offline) {
-        req.memo =  '电商/O2O\n' + req.memo
-        ticket.close()
+      if(analyze.zixia) { // is to zixia, known it from formChannel
+        if (!analyze.beijing) {
+          noteMsg = '非北京'
+          //        ticket.close()
+        } else if (analyze.game) {
+          noteMsg = '游戏'
+          //        ticket.close()      
+        } else if (analyze.offline) {
+          noteMsg =  '电商/O2On'
+          //        ticket.close()
+        } else {
+          noteMsg = '内容分析结果未知'
+        }
+        
+        noteMsg += '，是投递给zixia的'
+        ticket.mediumPriority()
+        ticket.assign(ID_AGENT_MARY)
+        
       } else {
-        req.memo = '内容分析结果未知\n' + req.memo
-        ticket.lowPriority()
-        ticket.assign(ID_AGENT_MARY) 
+        
+        noteMsg = '不碰指定发给他人的BP' 
+        if (req.bizplan && req.bizplan.deliverTo) {
+          noteMsg.concat(': ', req.bizplan.deliverTo)
+        }
+        
+        ticket.assign(ID_AGENT_ZIXIA)
+        ticket.close()
       }
       
-    } else { // is to zixia
-      
-      req.memo = '是投递给zixia的\n' + req.memo
-      ticket.mediumPriority()
+    } else { // no analyze
+      noteMsg = '未能进行分析'
+      ticket.lowPriority()
       ticket.assign(ID_AGENT_MARY)
-      
-    }
+    }      
     
     ticket.note({
       helpdesk_note: {
-        body: req.memo
+        body: noteMsg
         , private: true
       }
     })
 
+    req.errors.push(noteMsg)
+    
     next()
   }
   
@@ -586,24 +744,29 @@ function cleanInbox() {
     }
     
     var startup = {
-      name: getValue('产品叫什么')
+      deliverTo: getValue('联系哪位合伙人')
+      , name: getValue('产品叫什么')
       , description: getValue('一句话')
       , problem: getValue('痛点')
       , team: getValue('团队')
       , slogan: getValue('名言')
       , willing: getValue('投入')
-      , money: getValue('多少钱')
+      , money: getValue('融多少钱')
+      , keyword: getValue('关键词')
       , file: getValue('文件')
       , need: getValue('帮助')
+      , refer: getValue('哪里找到我们')
       , founder: getValue('姓名')
       , sex: getValue('性别')
       , email: getValue('Email')
       , mobile: getValue('手机')
       , wechat: getValue('微信')
       , birthday: getValue('生日')
+      , zodiac: getValue('星座')
       , company: getValue('公司')
       , web: getValue('网址')
       , address: getValue('地址')
+      , ex: getValue('扩展属性')
     }
     
     match = /mailto:([^@]+?@[^@]+?)['"]/.exec(startup.email)
@@ -635,8 +798,7 @@ function cleanInbox() {
     
     
     if (!startup.email) {
-      log(log.NOTICE, 'skipped because no startup.email for %s', startup.name)
-      return
+      return req.errors.push('skipped because no startup.email for '.concat(startup.name))
     }
     
     next()
@@ -742,12 +904,7 @@ function cleanInbox() {
     }
     
     if (isNotBizPlan) {
-      return log(log.NOTICE
-                 , '%s[%s]: is not bizplan because %s'
-                 , req.getChannelName()
-                 , req.getThread().getFirstMessageSubject()
-                 , reason
-                )
+      req.errors.push('is not bizplan because ' + reason)
     }
     
     next()
@@ -773,7 +930,7 @@ function cleanInbox() {
       var notice = Utilities.formatString('<p>NOTICE: %s attachments too large.</p><br />', Math.floor(attachments.length))
       description = notice + description
       
-      log(log.INFO, 'attachments dropped. original %s attachments.', Math.floor(attachments.length))
+      req.errors.push('attachments dropped. original ' + Math.floor(attachments.length) + ' attachments.')
     }
     
     req.bizplan = {
@@ -825,7 +982,7 @@ function cleanInbox() {
     if (recipients.length > 3) {   
       // need not CC to them
       bizplan.to = ''  
-      log(log.ALERT, 'Too many(%s) recipients. will not cc anybody.', recipients.length)
+      req.errors.push('Too many(' + recipients.length + ') recipients. will not cc anybody.')
     }
     
     /**
@@ -933,7 +1090,7 @@ function cleanInbox() {
           forwardMessage.moveToTrash()
         }
       } catch (e) {
-        log(log.ERR, 'forwardMessage: ' + e.message)
+        req.errors.push('forwardMessage: ' + e.name + ', ' + e.message)
       }
     }
     
@@ -956,22 +1113,10 @@ function cleanInbox() {
   function moveToArchive(req, res, next) { req.getThread().moveToArchive(); next() }
 
 
-  function isBeijingMobile(mobile) {
-    
-    var SEARCH_URL = 'https://tcc.taobao.com/cc/json/mobile_tel_segment.htm?tel='
-    
-    var response = UrlFetchApp.fetch(SEARCH_URL + mobile, {
-                                     muteHttpExceptions: true
-                                     })
-    
-    if (response.getResponseCode()!=200) return false
-    
-//    Logger.log(response.getContentText('GBK'))
-    return /北京/.test(response.getContentText('GBK'))
-  }
   
   function logOnStart(req, res, next) {
     req.startTime = new Date()
+    req.errors = []
     log(log.DEBUG, '%s start processing %s'
         , req.getChannelName()
         , req.getThread().getFirstMessageSubject()
@@ -980,10 +1125,12 @@ function cleanInbox() {
   }
 
   function logOnEnd(req, res, next) {
-    log(log.NOTICE, '%s finish processed(%ss) %s'
+    log(log.NOTICE, 'C(%s/%ss)[%s] %s'
         , req.getChannelName()  
         , Math.floor((new Date() - req.startTime)/1000)
+        
         , req.getThread().getFirstMessageSubject()
+        , req.errors.join(',')
        )
     next()
   }
@@ -1001,6 +1148,7 @@ function cleanInbox() {
     var from = firstMessage.getReplyTo() || firstMessage.getFrom()
     
     if (res.gasContact.isMyContact(from)) {
+      req.errors.push('skipped my contact:' + from)
       return log(log.DEBUG, req.getChannelName() + ': skipped my contact' + from)
     } 
     return next()
@@ -1008,11 +1156,20 @@ function cleanInbox() {
   
   function replySubmitGuideIfMailToBpAddress(req, res, next) {
     
-    var message = req.getThread().getMessages()[0]
+    var messages = req.getThread().getMessages() 
+    
+    var froms = messages
+    .map(function (m) { return m.getFrom() })
+    .join(',')
+    
+    var message = messages[0]
     var to = message.getTo()   
     
-    if (/bp@pre/i.test(to)) {
-      replySubmitGuide(message)
+    var RE = /bp@pre/i
+    if (RE.test(to)) { // 1. 是发给  bp@pre... 的
+      if (!RE.test(froms)) { // 2. 没有用 bp@pre... 邮件地址作为发件人回复过。（如果  replySubmitGuide 过，就会有这样的发件人。代表不重复回复）
+          replySubmitGuide(message)
+      }
     }
     
     next()

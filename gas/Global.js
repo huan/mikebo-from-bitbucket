@@ -6,11 +6,11 @@
 if ((typeof GasLog)==='undefined') { // GasL Initialization. (only if not initialized yet.)
   var TTL = 3
   var CODE = undefined
-  while (!CODE && TTL-->0) {
+  while (!CODE && TTL--) {
     try {
       CODE = UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gasl/master/src/gas-log-lib.js').getContentText()
     } catch (e) {
-      log(log.ERR, 'UrlFetchApp.fetch exception: %s', e.message)
+      Logger.log('UrlFetchApp.fetch exception: ' + e.message)
     }
   }
   if (CODE) {
@@ -61,7 +61,7 @@ if ((typeof Freshdesk)==='undefined') { // GasFreshdesk Initialization. (only if
   var CODE = undefined
   while (!CODE && TTL-->0) {
     try {
-      CODE = UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gas-freshdesk/master/src/gas-freshdesk-lib.js').getContentText()
+      CODE = UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gas-freshdesk/master/src/gas-freshdesk-lib.js?2').getContentText()
     } catch (e) {
       log(log.ERR, 'UrlFetchApp.fetch exception: %s', e.message)
     }

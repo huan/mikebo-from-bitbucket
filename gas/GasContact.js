@@ -14,6 +14,7 @@ var GasContact = (function() {
   GasContact.reloadContacts = reloadContacts
   GasContact.getEmailName = getEmailName
   GasContact.getEmailAddress = getEmailAddress
+  GasContact.isBeijingMobile = isBeijingMobile
   
   // for test
   GasContact.binary = binary
@@ -178,6 +179,32 @@ var GasContact = (function() {
     
     return name ?
       name : emailString
+  }
+
+  function isBeijingMobile(mobile) {
+    
+    var SEARCH_URL = 'https://tcc.taobao.com/cc/json/mobile_tel_segment.htm?tel='
+    
+    var TTL = 3
+    var response = undefined
+    var retCode = undefined
+    
+    while (!retCode && TTL--) {
+//      Logger.log('while loop ttl:'+TTL)
+      try {
+        response = UrlFetchApp.fetch(SEARCH_URL + mobile, {
+                                     muteHttpExceptions: true
+                                     })
+        retCode = response.getResponseCode()
+      } catch (e) {
+        log(log.ERR, 'UrlFetchApp.fetch exception: %s, %s', e.name, e.message)
+      }
+    }
+    
+    if (retCode!=200) return false
+    
+    //    Logger.log(response.getContentText('GBK'))
+    return /北京/.test(response.getContentText('GBK'))
   }
 
 }())
