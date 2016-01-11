@@ -9,7 +9,7 @@ function cleanInbox() {
     var CODE = undefined
     while (!CODE && TTL-->0) {
       try {
-        CODE = UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gas-gmail-channel/master/src/gas-gmail-channel-lib.js?2').getContentText()
+        CODE = UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gas-gmail-channel/master/src/gas-gmail-channel-lib.js').getContentText()
       } catch (e) {
         log(log.ERR, 'UrlFetchApp.fetch exception: %s', e.message)
       }
@@ -45,7 +45,7 @@ function cleanInbox() {
   ///////////////////////////////////////////////////////////////////////////
   //
   // Start Cleaning
-  
+
 //  return doIntviuChannel()       // 7. 橙云面试视频(IntViu)
   
   doBpZixiaChannel()      // 1. 同时发给 zixia@pre 和  bp@pre 邮箱
@@ -178,11 +178,19 @@ function cleanInbox() {
       }
     })
     
-//    bpChannel = new GmailChannel({
-//      query: '天使帮推荐项目- 众趣3D'
-//      , labels: []
+//    bpWithCipherChannel = new GmailChannel({
+//      name: 'bpWithCipher'
+//      , query: '李卓桓先生 医疗保健项目（有专利，有订单） 期待您的回复！感恩！'
+//      , keywords: []
+//      , labels: [
+//        , '-' + 'trash'
+//      ]
+//      
+//      , doneLabel: 'OutOfBpCipherChannel'
+//      , limit: LIMIT
 //      , res: {
 //        Ticket: MyFreshdesk.Ticket
+//        , gasContact: gasContact
 //      }
 //    })
     
@@ -429,6 +437,7 @@ function cleanInbox() {
     
     applyChannel.use(
       logOnStart
+      , labelAdd_BizPlan
       , labelAdd_Mike
       , labelAdd_Bug
 
@@ -873,6 +882,7 @@ function cleanInbox() {
   *
   */
   function skipInvalidBizPlan(req, res, next) {
+    log(log.DEBUG, 'entered skipInvalidBizPlan')
             
     var messages = req.getThread().getMessages()
     
@@ -912,6 +922,7 @@ function cleanInbox() {
   
   
   function summaryBizPlan(req, res, next) {
+    log(log.DEBUG, 'entered summaryBizPlan')
     
     // the first email from entrepreneur, normaly is BP
     var message = req.getThread().getMessages()[0]
@@ -951,6 +962,7 @@ function cleanInbox() {
   *
   */
   function createTicket(req, res, next) {
+    log(log.DEBUG, 'entered createTicket')
     
     var Ticket = res.Ticket
     if (!Ticket) throw Error('no Ticket class found!')
@@ -1009,10 +1021,9 @@ function cleanInbox() {
         })
       })  
     }
-    
-    req.ticket = new 
-    Ticket(ticketObj)
-    
+log(log.DEBUG, 'before new Ticket')    
+    req.ticket = new Ticket(ticketObj)
+log(log.DEBUG, 'after new Ticket')    
     next()
   }
   
@@ -1060,7 +1071,7 @@ function cleanInbox() {
       messages[i].moveToTrash()
       report += i + ', '
     }
-    log(log.DEBUG, report)
+    req.errors.push(report)
     next()
   }
   

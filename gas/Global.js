@@ -61,7 +61,7 @@ if ((typeof Freshdesk)==='undefined') { // GasFreshdesk Initialization. (only if
   var CODE = undefined
   while (!CODE && TTL-->0) {
     try {
-      CODE = UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gas-freshdesk/master/src/gas-freshdesk-lib.js?2').getContentText()
+      CODE = UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gas-freshdesk/master/src/gas-freshdesk-lib.js').getContentText()
     } catch (e) {
       log(log.ERR, 'UrlFetchApp.fetch exception: %s', e.message)
     }

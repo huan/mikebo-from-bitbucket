@@ -131,7 +131,7 @@ var GasContact = (function() {
     
     var remainingDailyQuota = MailApp.getRemainingDailyQuota()
     
-    log(log.INFO, 'Sheet for contacts set: Total contact: %s , email: %s , quota left: %s .', contacts.length, values.length, remainingDailyQuota)
+    log(log.NOTICE, 'Sheet for contacts set: Total contact: %s , email: %s , quota left: %s .', contacts.length, values.length, remainingDailyQuota)
     
   }
   
