@@ -62,8 +62,6 @@ var GasContact = (function() {
     mid = Math.floor((left + right) / 2)
     while( left < right && list[mid] != value )
     {
-//      log('left:'+left+', right:'+right+', mid:'+mid+', value:'+value)
-//      log('left:'+list[left]+', right:'+list[right]+', mid:'+list[mid])  
       if (list[mid] < value ) {
         left = mid + 1
       } else if( list[mid] > value ) {
@@ -71,10 +69,8 @@ var GasContact = (function() {
       }
       mid = Math.floor((left + right) / 2)
     }
-    if( list[mid] == value )
-      return mid
-      
-      return -1
+    if( list[mid] == value ) return mid
+    return -1
   }
 
   /**
