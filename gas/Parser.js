@@ -116,7 +116,7 @@ var Parser = (function () {
     while (match=RE.exec(tableHtml)) {
       var header = stripHtmlTag(match[1])
       var description = stripHtmlTag(match[2])
-    Logger.log(header) //XXX  
+//    Logger.log(header) //XXX  
       tableArray[header] = description
     }
 //Logger.log(JSON.stringify(tableArray))//XXX
@@ -138,8 +138,8 @@ var Parser = (function () {
     
     match = /mailto:([^@]+?@[^@]+?)['"]/.exec(interview.email)
     if (match) interview.email = match[1]
-    Logger.log(JSON.stringify(req.table)) // XXX
-    Logger.log(JSON.stringify(interview)) // XXX
+//    Logger.log(JSON.stringify(req.table)) // XXX
+//    Logger.log(JSON.stringify(interview)) // XXX
     
     req.table = interview
     next()

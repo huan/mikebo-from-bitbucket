@@ -7,7 +7,7 @@ function mikeTestRunner() {
 
   var test = new GasTap()
   
-  return development()
+//  return development()
   
   /////////////////////////////////////
   //
@@ -140,6 +140,7 @@ function mikeTestRunner() {
       }
       var req = {
         getThread: function () { return thread }
+        , getMessage: function () { return message }
       }
       var res = {}
       var next = function () {}
@@ -174,6 +175,7 @@ function mikeTestRunner() {
       }
       var req = {
         getThread: function () { return thread }
+        , getMessage: function () { return message }
       }
       var res = {}
       var next = function (e) { if (e) throw Error(e) }
@@ -268,6 +270,7 @@ function mikeTestRunner() {
       }
       var req = {
         getThread: function () { return thread }
+        , getMessage: function () { return message }
       }
       var res = {}
       var next = function (e) { if (e) throw Error(e) }
