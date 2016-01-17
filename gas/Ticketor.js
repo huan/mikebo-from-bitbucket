@@ -68,7 +68,7 @@ var Ticketor = (function () {
     
     var ticketId = req.ticket ? req.ticket.getId() : '?'
     
-    req.errors.push('paired to ticket#' + ticketId )
+    req.errors.push('paired ticket#' + ticketId )
     
     next()
   }
@@ -90,7 +90,7 @@ var Ticketor = (function () {
         , private: true
       })
       ticket.open()
-      req.errors.push('note added to ticket#' + ticket.getId())
+      req.errors.push('added note to ticket#' + ticket.getId())
       
     } else { // new ticket
       
@@ -101,7 +101,7 @@ var Ticketor = (function () {
         , email: table.email
       })
       req.ticket = ticket
-      req.errors.push('note created as ticket#' + ticket.getId())
+      req.errors.push('created note as ticket#' + ticket.getId())
                     
     }
     
@@ -126,7 +126,7 @@ var Ticketor = (function () {
         // , cc_emails: [ table.email ]
       })
       ticket.open()
-      req.errors.push('replied to ticket#' + ticket.getId())
+      req.errors.push('replied ticket#' + ticket.getId())
       
     } else { // new ticket
       
@@ -137,7 +137,7 @@ var Ticketor = (function () {
         , email: table.email
       })
       req.ticket = ticket
-      req.errors.push('reply created as ticket#' + ticket.getId())
+      req.errors.push('created reply as ticket#' + ticket.getId())
                     
     }
     
@@ -268,7 +268,7 @@ var Ticketor = (function () {
     req.ticket = new Ticket(ticketObj)
 //log(log.NOTICE, 'after new Ticket')    
     
-    req.errors.push('ticket #' + req.ticket.getId() + ' created')
+    req.errors.push('created ticket #' + req.ticket.getId())
     next()
   }
   

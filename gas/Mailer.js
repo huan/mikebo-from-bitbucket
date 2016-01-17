@@ -38,6 +38,7 @@ var Mailer = (function () {
   */
   Mailer.moveToArchive = function (req, res, next) { req.getThread().moveToArchive(); next() }
   Mailer.trashMessage = function (req, res, next) { req.getMessage().moveToTrash(); next() }
+  Mailer.markRead = function (req, res, next) { req.getThread().markRead(); next() }
   
   
   return Mailer
@@ -231,12 +232,12 @@ var Mailer = (function () {
         var isFwd = !m.isInTrash() && 'zixia@zixia.net' == m.getFrom() && ZIXIABPGROUP == m.getTo()
         log(log.NOTICE, 'isFwd: %s', isFwd)
         
-        return 
-        ( 
-          !m.isInTrash() 
-          && 'zixia@zixia.net' == m.getFrom() 
-        && ZIXIABPGROUP == m.getTo()
-        )
+        return isFwd
+//        ( 
+//          !m.isInTrash() 
+//          && 'zixia@zixia.net' == m.getFrom() 
+//        && ZIXIABPGROUP == m.getTo()
+//        )
       })
       
       log(log.NOTICE, 'filtered messages.length: %s', messages.length)

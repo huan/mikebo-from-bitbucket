@@ -1,5 +1,10 @@
 function cleanInbox() {
   'use strict'  
+
+  // DAYSPAN: how many day(s) looks back by search 
+  var DAYSPAN = 7
+  // LIMIT: how many message(s) processed per call
+  var LIMIT   = 7
   
   if ((typeof log)==='undefined') eval ('var log = new GasLog()')
 
@@ -22,16 +27,6 @@ function cleanInbox() {
 
 
   var gasContact = new GasContact()
-    
-  /************************************************
-  *
-  * LIMIT: how many message(s) processed per call
-  * DAYSPAN: how many day(s) looks back by search 
-  *
-  */
-  var DAYSPAN = 7
-  var LIMIT   = 7
-
 
   var startTime = new Date()
   log(log.DEBUG, 'InboxCleaner starting...')
@@ -57,8 +52,8 @@ function cleanInbox() {
   doBpZixiaChannel()      // 2. 同时发给 zixia@pre 和  bp@pre 邮箱
   doZixiaChannel()        // 3. 只发到 zixia@pre 邮箱
   
-  doFormChannel()         // 4. 通过表单提交
-  doApplyChannel()        // 5. PreAngel申请表（MikeCRM）
+  doFormChannel()         // 4. 通过表单提交(JsForm)
+  doApplyChannel()        // 5. PreAngel申请表(MikeCRM)
   doIntviuChannel()       // 6. 橙云面试视频(IntViu)
   
   // End Cleaning
@@ -81,7 +76,7 @@ function cleanInbox() {
   
   //////////////////////////////////////////////////////////////////////////
   //
-  // Main code above execute END here
+  // END: Main code above execute END here
   //
   //////////////////////////////////////////////////////////////////////////
 
@@ -95,7 +90,7 @@ function cleanInbox() {
   
   
   
-  /**
+  /******************************************************
   *
   *
   *
@@ -116,14 +111,17 @@ function cleanInbox() {
         , '-' + 'trash'
       ]
       , dayspan: DAYSPAN
-      , query: ['-(zixia OR lizh OR lizhuohuan OR lzhuohuan OR zhuohuan '
+      , query: ['-(zixia'
+                , ' OR lizh OR lizhuohuan OR lzhuohuan OR zhuohuan '
                 , ' OR 卓桓 OR 李兄 OR 李卓桓 OR 卓恒 OR 李卓恒 OR 李总 OR 李老师 OR 李先生 '
-                , ' OR abu OR 阿布 OR bruce OR ceibsmobi.com OR akamobi.com)'
-               ].join('')
-      + ' ' + '-is:important'
-      + ' ' + '-17salsa'
-      + ' ' + '-融资申请'
-      + ' ' + '-最简单的创业计划书'
+                , ' OR abu OR 阿布 OR bruce OR ceibsmobi.com OR akamobi.com'
+                , ')'
+
+                , '-is:important'
+                , '-17salsa'
+                , '-融资申请'
+                , '-最简单的创业计划书'
+               ].join(' ')
       
       , doneLabel: 'OutOfBulkChannel'
       , limit: LIMIT
@@ -184,7 +182,7 @@ function cleanInbox() {
   
   
   
-  /**
+  /******************************************************
   *
   *
   *
@@ -199,20 +197,15 @@ function cleanInbox() {
     var bpWithCipherChannel = new GmailChannel({
       name: 'bpWithCipher'
       , keywords: []
-      , labels: [
-        'inbox'
-        , '-' + 'trash'
-      ]
+      , labels: [ 'inbox', '-trash' ]
       , dayspan: DAYSPAN
-      , query: '(to:(bp@pre-angel.com OR bp@preangelpartners.com) NOT to:zixia)'
-      + ' ' + '(abu OR 阿布 OR bruce OR zixia OR lizh OR lizhuohuan OR zhuohuan OR 卓桓 OR 李兄 OR 李卓桓 OR 卓恒 OR 李卓恒 OR 李总 OR 李老师 OR 李先生)'
-      + ' ' + '("邮箱发来的超大附件" OR "邮箱发来的云附件" OR (filename:pptx OR filename:ppt OR filename:pdf OR filename:doc))'
-      
+      , query: ['(to:(bp@pre-angel.com OR bp@preangelpartners.com) NOT to:zixia)'
+                , '(abu OR 阿布 OR bruce OR zixia OR lizh OR lizhuohuan OR zhuohuan OR 卓桓 OR 李兄 OR 李卓桓 OR 卓恒 OR 李卓恒 OR 李总 OR 李老师 OR 李先生)'
+                , '("邮箱发来的超大附件" OR "邮箱发来的云附件" OR (filename:pptx OR filename:ppt OR filename:pdf OR filename:doc))'
+               ].join(' ')
       , doneLabel: 'OutOfBpCipherChannel'
       , limit: LIMIT
-      , res: {
-        gasContact: gasContact
-      }
+      , res: { gasContact: gasContact }
     })
     
 //    bpWithCipherChannel = new GmailChannel({
@@ -262,6 +255,9 @@ function cleanInbox() {
   
   
   
+  
+  
+  
   /***************************************************
   *
   *
@@ -277,20 +273,15 @@ function cleanInbox() {
     var bpZixiaChannel = new GmailChannel({
       name: 'bpZixia'
       , keywords: []
-      , labels: [
-        'inbox'
-        , '-' + 'trash'
-      ]
+      , labels: [ 'inbox', '-trash' ]
       , dayspan: DAYSPAN
-      , query: 'to:(zixia@pre-angel.com OR zixia@preangelpartners.com)'
-      + ' ' + 'to:(bp@pre-angel.com OR bp@preangelpartners.com)'
-      + ' ' + 'has:attachment'
-      
+      , query: [ 'to:(zixia@pre-angel.com OR zixia@preangelpartners.com)'
+                , 'to:(bp@pre-angel.com OR bp@preangelpartners.com)'
+                , 'has:attachment'
+               ].join(' ')
       , doneLabel: 'OutOfBpZixiaChannel'
       , limit: LIMIT
-      , res: {
-        gasContact: gasContact
-      }
+      , res: { gasContact: gasContact }
     })
     
 //    bpChannel = new GmailChannel({
@@ -332,7 +323,11 @@ function cleanInbox() {
   
   
   
-  /**
+  
+  
+  
+  
+  /******************************************************
   *
   *
   *
@@ -346,19 +341,14 @@ function cleanInbox() {
     var zixiaChannel = new GmailChannel({
       name: 'zixia'
       , keywords: []
-      , labels: [
-        'inbox'
-        , '-' + 'trash'
-      ]
-      , dayspan: 1
-      , query: '("邮箱发来的超大附件" OR "邮箱发来的云附件" OR (filename:pptx OR filename:ppt OR filename:pdf))'
-      + ' ' + '(to:(zixia@pre-angel.com OR zixia@preangelpartners.com) NOT to:(bp@pre-angel.com OR bp@preangelpartners.com))'
-      
+      , labels: [ 'inbox', '-trash' ]
+      , dayspan: DAYSPAN
+      , query: [ '("邮箱发来的超大附件" OR "邮箱发来的云附件" OR (filename:pptx OR filename:ppt OR filename:pdf))'
+                , '(to:(zixia@pre-angel.com OR zixia@preangelpartners.com) NOT to:(bp@pre-angel.com OR bp@preangelpartners.com))'
+               ].join(' ')
       , doneLabel: 'OutOfZixiaChannel'
-      , limit: 1
-      , res: {
-        gasContact: gasContact
-      }
+      , limit: LIMIT
+      , res: { gasContact: gasContact }
     })
     
 //    zixiaChannel = new GmailChannel({
@@ -372,13 +362,6 @@ function cleanInbox() {
 //    })
     
     log(log.DEBUG, zixiaChannel.getName() + ' QUERY_STRING: [' + zixiaChannel.getQueryString() + ']')
-
-//for (var i in t) {
-//  Logger.log(i)
-//  Logger.log(t[i])
-//}
-//    
-//    return
     
     zixiaChannel.use(
       logOnStart
@@ -410,7 +393,11 @@ function cleanInbox() {
   
   
   
-  /**
+  
+  
+  
+  
+  /******************************************************
   *
   *
   *
@@ -428,16 +415,12 @@ function cleanInbox() {
         , '最简单的创业计划书'
         , '-abcdefghijklmnopqrstuvwxyz'
       ]
-      , labels: [
-        , '-trash'
-      ]
+      , labels: ['-trash']
       , dayspan: DAYSPAN
       , query: 'to:bp'
       , doneLabel: 'OutOfFormChannel'
       , limit: LIMIT
-      , res: {
-        gasContact: gasContact
-      }
+      , res: { gasContact: gasContact }
     })
     
     //  formChannel = new GmailChannel({
@@ -481,7 +464,11 @@ function cleanInbox() {
   
   
   
-  /**
+  
+  
+  
+  
+  /******************************************************
   *
   *
   *
@@ -494,19 +481,13 @@ function cleanInbox() {
         
     var applyChannel = new GmailChannel({
       name: 'apply'
-      , keywords: [
-        'PreAngel申请表 '
-      ]
-      , labels: [
-        , '-trash'
-      ]
+      , keywords: [ 'PreAngel创始人申请表' ]
+      , labels: [ '-trash' ]
       , dayspan: DAYSPAN
       , query: 'from:mikecrm.com to:(zixia OR bp)'
       , doneLabel: 'OutOfApplyChannel'
       , limit: LIMIT
-      , res: {
-        gasContact: gasContact
-      }
+      , res: { gasContact: gasContact }
     })
     
     log(log.DEBUG, applyChannel.getName() + ' QUERY_STRING: [' + applyChannel.getQueryString() + ']')
@@ -523,6 +504,7 @@ function cleanInbox() {
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
 
+      , Mailer.markRead
       , Mailer.moveToArchive
       , Mailer.labelDel_Bug
     )
@@ -536,7 +518,12 @@ function cleanInbox() {
   
   
   
-  /**
+  
+  
+  
+  
+  
+  /******************************************************
   *
   *
   *
@@ -549,12 +536,8 @@ function cleanInbox() {
         
     var intviuChannel = new GmailChannel({
       name: 'intviu'
-      , keywords: [
-        '您发布的职位已有面试视频上传'
-      ]
-      , labels: [
-        , '-trash'
-      ]
+      , keywords: [ '您发布的职位已有面试视频上传' ]
+      , labels: [ '-trash' ]
       , dayspan: DAYSPAN
       , query: 'from:@intviu.cn to:(zixia OR bp)'
       
@@ -565,9 +548,7 @@ function cleanInbox() {
       , conversation: false
       
       , limit: LIMIT
-      , res: {
-        gasContact: gasContact
-      }
+      , res: { gasContact: gasContact }
     })
     
     log(log.DEBUG, intviuChannel.getName() + ' QUERY_STRING: [' + intviuChannel.getQueryString() + ']')
@@ -592,7 +573,20 @@ function cleanInbox() {
     
   }   
 
+
+
+
+
+
+
+
   ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  
+  
+  
+  
+  
   
   
   function logOnStart(req, res, next) {
