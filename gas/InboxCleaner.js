@@ -152,7 +152,7 @@ function cleanInbox() {
     log(log.DEBUG, bulkChannel.getName() + ' QUERY_STRING: [' + bulkChannel.getQueryString() + ']')
 
     bulkChannel.use(
-      logOnStart
+      Bizplaner.logOnStart
       , Mailer.labelAdd_Mike
       
       , Mailer.skipFromMyContacts
@@ -166,7 +166,7 @@ function cleanInbox() {
       , Mailer.labelDel_Bug
     )
     
-    return bulkChannel.done(logOnEnd)
+    return bulkChannel.done(Bizplaner.logOnEnd)
     
   }
 
@@ -227,7 +227,7 @@ function cleanInbox() {
     log(log.DEBUG, bpWithCipherChannel.getName() + ' QUERY_STRING: [' + bpWithCipherChannel.getQueryString() + ']')
     
     bpWithCipherChannel.use(
-      logOnStart
+      Bizplaner.logOnStart
       , Mailer.labelAdd_Mike
       , Mailer.labelAdd_NotBizPlan
       
@@ -246,7 +246,7 @@ function cleanInbox() {
       , Mailer.labelDel_Bug
     )
 
-    bpWithCipherChannel.done(logOnEnd)
+    bpWithCipherChannel.done(Bizplaner.logOnEnd)
     
   }
 
@@ -295,7 +295,7 @@ function cleanInbox() {
     log(log.DEBUG, bpZixiaChannel.getName() + ' QUERY_STRING: ' + bpZixiaChannel.getQueryString())
     
     bpZixiaChannel.use(
-      logOnStart
+      Bizplaner.logOnStart
       , Mailer.labelAdd_Mike
       , Mailer.labelAdd_NotBizPlan
 
@@ -314,7 +314,7 @@ function cleanInbox() {
       , Mailer.labelDel_Bug
     )
 
-    bpZixiaChannel.done(logOnEnd)
+    bpZixiaChannel.done(Bizplaner.logOnEnd)
 
   }
   
@@ -364,7 +364,7 @@ function cleanInbox() {
     log(log.DEBUG, zixiaChannel.getName() + ' QUERY_STRING: [' + zixiaChannel.getQueryString() + ']')
     
     zixiaChannel.use(
-      logOnStart
+      Bizplaner.logOnStart
       , Mailer.labelAdd_Mike
       , Mailer.labelAdd_NotBizPlan
 
@@ -384,7 +384,7 @@ function cleanInbox() {
       , Mailer.labelDel_Bug
     )
     
-    zixiaChannel.done(logOnEnd)
+    zixiaChannel.done(Bizplaner.logOnEnd)
     
   } 
   
@@ -434,7 +434,7 @@ function cleanInbox() {
     log(log.DEBUG, formChannel.getName() + ' QUERY_STRING: [' + formChannel.getQueryString() + ']')
     
     formChannel.use(
-      logOnStart
+      Bizplaner.logOnStart
       , Mailer.labelAdd_Bug
 
       , Mailer.labelAdd_Mike
@@ -455,7 +455,7 @@ function cleanInbox() {
       , Mailer.labelDel_Bug
     )
     
-    formChannel.done(logOnEnd)
+    formChannel.done(Bizplaner.logOnEnd)
     
   }   
   
@@ -493,7 +493,7 @@ function cleanInbox() {
     log(log.DEBUG, applyChannel.getName() + ' QUERY_STRING: [' + applyChannel.getQueryString() + ']')
     
     applyChannel.use(
-      logOnStart
+      Bizplaner.logOnStart
       , Mailer.labelAdd_BizPlan
       , Mailer.labelAdd_Mike
       , Mailer.labelAdd_Bug
@@ -509,7 +509,7 @@ function cleanInbox() {
       , Mailer.labelDel_Bug
     )
     
-    applyChannel.done(logOnEnd)
+    applyChannel.done(Bizplaner.logOnEnd)
     
   }   
   
@@ -554,7 +554,7 @@ function cleanInbox() {
     log(log.DEBUG, intviuChannel.getName() + ' QUERY_STRING: [' + intviuChannel.getQueryString() + ']')
     
     intviuChannel.use(
-      logOnStart
+      Bizplaner.logOnStart
       , Mailer.labelAdd_BizPlan
       , Mailer.labelAdd_Mike
       , Mailer.labelAdd_Bug
@@ -569,51 +569,9 @@ function cleanInbox() {
       , Mailer.labelDel_Bug
     )
     
-    intviuChannel.done(logOnEnd)
+    intviuChannel.done(Bizplaner.logOnEnd)
     
   }   
 
-
-
-
-
-
-
-
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  
-  
-  
-  
-  
-  
-  
-  function logOnStart(req, res, next) {
-    req.startTime = new Date()
-    req.errors = []
-    log(log.DEBUG, '%s start processing %s'
-        , req.getChannelName()
-        , req.getThread().getFirstMessageSubject()
-       )
-    next()
-  }
-
-  function logOnEnd(req, res, next) {
-    log(log.NOTICE, 'C(%s/%ss)[%s] %s'
-        , req.getChannelName()  
-        , Math.floor((new Date() - req.startTime)/1000)
-        
-        , req.getThread().getFirstMessageSubject()
-        , req.errors.map(function (e) { 
-          if (e instanceof Error) {
-            return e.name + ':' + e.message + ':' + e.stack
-          } else {
-            return e
-          }
-        }).join(',')
-       )
-    next()
-  }
  
 }

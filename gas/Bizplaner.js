@@ -9,6 +9,9 @@ var Bizplaner = (function () {
   Bizplaner.skipInvalidBizPlan = skipInvalidBizPlan
   Bizplaner.summaryBizPlan = summaryBizPlan
   Bizplaner.analyzeDetails = analyzeDetails
+
+  Bizplaner.logOnEnd = logOnEnd
+  Bizplaner.logOnStart = logOnStart
   
   return Bizplaner
   
@@ -140,9 +143,13 @@ var Bizplaner = (function () {
        )
       ) isToZixia = true;
     
+    Logger.log('isToZixia 1: ' + isToZixia)  
+    
     if (startup && startup.deliverTo) {
-      if (!/李卓桓|无所谓/.test(startup.deliverTo)) isToZixia = false
+      if (/无所谓/.test(startup.deliverTo)) isToZixia = true
+      else if (!/李卓桓/.test(startup.deliverTo)) isToZixia = false
     }
+    Logger.log('isToZixia 2: ' + isToZixia)    
         
     // isToZixia
     //
@@ -191,6 +198,32 @@ var Bizplaner = (function () {
     next()
   }
 
+  function logOnStart(req, res, next) {
+    req.startTime = new Date()
+    req.errors = []
+    log(log.DEBUG, '%s start processing %s'
+        , req.getChannelName ? req.getChannelName() : 'unknown'
+        , req.getThread      ? req.getThread().getFirstMessageSubject() : 'unknown'
+       )
+    next()
+  }
+
+  function logOnEnd(req, res, next) {
+    log(log.NOTICE, 'C(%s/%ss)[%s] %s'
+        , req.getChannelName ? req.getChannelName() : 'unknown'
+        , Math.floor((new Date() - req.startTime)/1000)
+        
+        , req.getThread ? req.getThread().getFirstMessageSubject() : 'unknown'
+        , req.errors.map(function (e) { 
+          if (e instanceof Error) {
+            return e.name + ':' + e.message + ':' + e.stack
+          } else {
+            return e
+          }
+        }).join(',')
+       )
+    next()
+  }
   
   
   /////////////////////////////////////////////////////////////////////////
@@ -232,5 +265,6 @@ var Bizplaner = (function () {
     return []
     
   }
+
 
 }())
