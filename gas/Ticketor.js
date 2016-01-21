@@ -8,7 +8,7 @@ var Ticketor = (function () {
   * 3. Freshdesk API
   *
   */
-  if ((typeof Freshdesk)==='undefined') { // GasFreshdesk Initialization. (only if not initialized yet.)
+  if ((typeof GasFreshdesk)==='undefined') { // GasFreshdesk Initialization. (only if not initialized yet.)
     var TTL = 3
     var CODE = undefined
     while (!CODE && TTL-->0) {
@@ -27,7 +27,7 @@ var Ticketor = (function () {
   var FRESHDESK_URL = PropertiesService.getScriptProperties().getProperty('FreshdeskDomainUrl')
   var FRESHDESK_KEY = PropertiesService.getScriptProperties().getProperty('FreshdeskApiKey')
   
-  var MyFreshdesk = new Freshdesk(FRESHDESK_URL, FRESHDESK_KEY)
+  var MyFreshdesk = new GasFreshdesk(FRESHDESK_URL, FRESHDESK_KEY)
   var Ticket = MyFreshdesk.Ticket
   var Contact = MyFreshdesk.Contact
   
@@ -96,7 +96,7 @@ var Ticketor = (function () {
       
       ticket = new Ticket({
         description_html: tableHtml
-        , subject: table.company
+        , subject: table.company || '未填写'
         , name: table.name
         , email: table.email
       })
@@ -250,7 +250,7 @@ var Ticketor = (function () {
       , email: GasContact.getEmailAddress(bizplan.from)
 //      , cc_emails: bizplan.to
     }
-    
+
     if (bizplan.attachments && bizplan.attachments instanceof Array && bizplan.attachments.length) {
       
       ticketObj.attachments = []

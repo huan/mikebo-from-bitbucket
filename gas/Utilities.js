@@ -1,7 +1,7 @@
 function importJsFromToFreshdesk() {
   // TODO: attachment link is not right
   
-  var NUM_PER_RUN = 37
+  var NUM_PER_RUN = 3
   
   var API_KEY = '5645a52f0cf2c287635773bc'
   var API_SECRET = 'eziLACQ59B3XdlajxW3BXE4xmo2UKqBS'
@@ -97,7 +97,7 @@ function importJsFromToFreshdesk() {
   var scriptProperties = PropertiesService.getScriptProperties()
   
   var START_TIME = scriptProperties.getProperty('last_time')
-  if (!START_TIME) START_TIME = (new Date(2015, 11, 25)).getTime()
+  if (!START_TIME) START_TIME = (new Date(2016, 0, 17)).getTime()
 
   
   Logger.log(String(START_TIME))
@@ -176,7 +176,8 @@ function importJsFromToFreshdesk() {
     
     Parser.table2Bizplan(req, res, next)  
     
-    Ticketor.create(req, res, next)
+    Ticketor.tryToPair(req, res, next)
+    Ticketor.noteOrCreate(req, res, next)
     
     Bizplaner.analyzeDetails(req, res, next)
     

@@ -54,8 +54,8 @@ var Bizplaner = (function () {
       
     }
     
-    if (isNotBizPlan) {
-      req.errors.push('is not bizplan because ' + reason)
+    if (isNotBizPlan) { // stop and return
+      return req.errors.push('is not bizplan because ' + reason)
     }
     
     next()
@@ -85,6 +85,8 @@ var Bizplaner = (function () {
       req.errors.push('attachments dropped. original ' + Math.floor(attachments.length) + ' attachments.')
     }
     
+//    log('summary bizplan from: %s', from)
+    
     req.bizplan = {
       from: from
       , to: to // + ',' + cc
@@ -104,7 +106,6 @@ var Bizplaner = (function () {
     
     if (!bizplan) {
       req.errors.push('no bizplan found, cant analyze for [' + req.getThread().getFirstMessageSubject() + ']')
-//      log(log.ERR, 'no bizplan found, cant analyze for [%s]', req.getThread().getFirstMessageSubject())
       return false
     }
     
@@ -142,18 +143,16 @@ var Bizplaner = (function () {
           + message.getBody()
        )
       ) isToZixia = true;
-    
-    Logger.log('isToZixia 1: ' + isToZixia)  
-    
+        
     if (startup && startup.deliverTo) {
-      if (/无所谓/.test(startup.deliverTo)) isToZixia = true
+      if (/无所谓|所有人/.test(startup.deliverTo)) isToZixia = true
       else if (!/李卓桓/.test(startup.deliverTo)) isToZixia = false
     }
-    Logger.log('isToZixia 2: ' + isToZixia)    
         
     // isToZixia
     //
     /////////////////////////////////////////
+    
     
     /////////////////////////////////////////////////
     //

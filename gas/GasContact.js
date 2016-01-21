@@ -141,17 +141,18 @@ var GasContact = (function() {
   */
   function getEmailAddress(emailString) {
     
+    // Array
     if (/,/.test(emailString)) {
       return emailString.split(/,/).map(function (e) {
         return getEmailAddress(e)
       })
     }
     
-    var RE = /[^<\s]+@[^>\s]+/
+    var RE = /([^<\s]+@[^>\s]+)>?$/
     var email = RE.exec(emailString)
     
     return email ? 
-      email[0] : null
+      email[1] : null
   }
   
   function getEmailName(emailString) {

@@ -324,6 +324,11 @@ function mikeTestRunner() {
       var email = GasContact.getEmailAddress(FROM)
       t.equal(email, EXPECTED_EMAIL, 'extract email address')
       
+
+      var FROM = '"qsw@qushuawang.com" <qsw@qushuawang.com>'
+      var EXPECTED_EMAIL = 'qsw@qushuawang.com'
+      var email = GasContact.getEmailAddress(FROM)
+      t.equal(email, EXPECTED_EMAIL, 'extract email address with quota')
       ///////////////////////////////////////////////////////////////
     })
     

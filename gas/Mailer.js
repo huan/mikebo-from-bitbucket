@@ -226,11 +226,11 @@ var Mailer = (function () {
       log(log.NOTICE, 'forward ttl:%s, message num:%s', ttl, thread.getMessages().length)
       
       var messages = thread.getMessages().filter(function(m) {
-        log(log.NOTICE, 'isInTrash:%s, from:%s, to:%s', m.isInTrash(), m.getFrom(), m.getTo())
-        log(log.NOTICE, '!isInTrash:%s, from:%s, to:%s', !m.isInTrash(), 'zixia@zixia.net' == m.getFrom(), ZIXIABPGROUP == m.getTo())
+//        log(log.NOTICE, 'isInTrash:%s, from:%s, to:%s', m.isInTrash(), m.getFrom(), m.getTo())
+//        log(log.NOTICE, '!isInTrash:%s, from:%s, to:%s', !m.isInTrash(), 'zixia@zixia.net' == m.getFrom(), ZIXIABPGROUP == m.getTo())
         
         var isFwd = !m.isInTrash() && 'zixia@zixia.net' == m.getFrom() && ZIXIABPGROUP == m.getTo()
-        log(log.NOTICE, 'isFwd: %s', isFwd)
+//        log(log.NOTICE, 'isFwd: %s', isFwd)
         
         return isFwd
 //        ( 
@@ -240,7 +240,7 @@ var Mailer = (function () {
 //        )
       })
       
-      log(log.NOTICE, 'filtered messages.length: %s', messages.length)
+//      log(log.NOTICE, 'filtered messages.length: %s', messages.length)
       
       if (messages.length > 0) {
         fwdMessage = messages[0]

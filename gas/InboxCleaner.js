@@ -36,7 +36,8 @@ function cleanInbox() {
   // 
   // Development & Testing
   //
-//  return doIntviuChannel()
+//  return development()
+//  return doZixiaChannel()
   //
   ////////////////////////////////////////////////////
   
@@ -85,7 +86,10 @@ function cleanInbox() {
   
   
   
-  
+  function development() {
+    var a = {}
+    log('from: %s', a.from)
+  }
   
   
   
@@ -121,6 +125,7 @@ function cleanInbox() {
                 , '-17salsa'
                 , '-融资申请'
                 , '-最简单的创业计划书'
+                , '-PreAngel创始人申请表'
                ].join(' ')
       
       , doneLabel: 'OutOfBulkChannel'
@@ -353,14 +358,12 @@ function cleanInbox() {
     
 //    zixiaChannel = new GmailChannel({
 //      name: 'zixiaChannel'
-//      , query: '1217 Bosrado自制真人秀-挑战老板（投资版）'
+//      , query: '为我的创业项目“去耍”寻求筹款'
 //      , labels: []
-//      , res: {
-//        Ticket: MyFreshdesk.Ticket
-//        , gasContact: gasContact
-//      }
+//      , doneLabel: null
+//      , res: { gasContact: gasContact }
 //    })
-    
+
     log(log.DEBUG, zixiaChannel.getName() + ' QUERY_STRING: [' + zixiaChannel.getQueryString() + ']')
     
     zixiaChannel.use(
@@ -444,7 +447,9 @@ function cleanInbox() {
       , Parser.table2Bizplan
       
       
-      , Ticketor.create
+      , Ticketor.tryToPair
+      , Ticketor.noteOrCreate
+//      , Ticketor.create
 
       , Bizplaner.analyzeDetails
       , Ticketor.process
@@ -503,6 +508,7 @@ function cleanInbox() {
       
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
+//      , Ticketor.replyOrCreate
 
       , Mailer.markRead
       , Mailer.moveToArchive
@@ -564,6 +570,7 @@ function cleanInbox() {
       
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
+//      , Ticketor.replyOrCreate
 
       , Mailer.trashMessage
       , Mailer.labelDel_Bug
