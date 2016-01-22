@@ -10,9 +10,6 @@ var Bizplaner = (function () {
   Bizplaner.summaryBizPlan = summaryBizPlan
   Bizplaner.analyzeDetails = analyzeDetails
 
-  Bizplaner.logOnEnd = logOnEnd
-  Bizplaner.logOnStart = logOnStart
-  
   return Bizplaner
   
   
@@ -197,33 +194,7 @@ var Bizplaner = (function () {
     next()
   }
 
-  function logOnStart(req, res, next) {
-    req.startTime = new Date()
-    req.errors = []
-    log(log.DEBUG, '%s start processing %s'
-        , req.getChannelName ? req.getChannelName() : 'unknown'
-        , req.getThread      ? req.getThread().getFirstMessageSubject() : 'unknown'
-       )
-    next()
-  }
 
-  function logOnEnd(req, res, next) {
-    log(log.NOTICE, 'C(%s/%ss)[%s] %s'
-        , req.getChannelName ? req.getChannelName() : 'unknown'
-        , Math.floor((new Date() - req.startTime)/1000)
-        
-        , req.getThread ? req.getThread().getFirstMessageSubject() : 'unknown'
-        , req.errors.map(function (e) { 
-          if (e instanceof Error) {
-            return e.name + ':' + e.message + ':' + e.stack
-          } else {
-            return e
-          }
-        }).join(',')
-       )
-    next()
-  }
-  
   
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

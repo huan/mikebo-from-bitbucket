@@ -96,7 +96,7 @@ var Ticketor = (function () {
       
       ticket = new Ticket({
         description_html: tableHtml
-        , subject: table.company || '未填写'
+        , subject: table.company || table.name || '未填写'
         , name: table.name
         , email: table.email
       })

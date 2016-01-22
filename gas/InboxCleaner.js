@@ -157,7 +157,7 @@ function cleanInbox() {
     log(log.DEBUG, bulkChannel.getName() + ' QUERY_STRING: [' + bulkChannel.getQueryString() + ']')
 
     bulkChannel.use(
-      Bizplaner.logOnStart
+      Tracker.logOnStart
       , Mailer.labelAdd_Mike
       
       , Mailer.skipFromMyContacts
@@ -171,7 +171,7 @@ function cleanInbox() {
       , Mailer.labelDel_Bug
     )
     
-    return bulkChannel.done(Bizplaner.logOnEnd)
+    return bulkChannel.done(Tracker.logOnEnd)
     
   }
 
@@ -232,7 +232,7 @@ function cleanInbox() {
     log(log.DEBUG, bpWithCipherChannel.getName() + ' QUERY_STRING: [' + bpWithCipherChannel.getQueryString() + ']')
     
     bpWithCipherChannel.use(
-      Bizplaner.logOnStart
+      Tracker.logOnStart
       , Mailer.labelAdd_Mike
       , Mailer.labelAdd_NotBizPlan
       
@@ -251,7 +251,7 @@ function cleanInbox() {
       , Mailer.labelDel_Bug
     )
 
-    bpWithCipherChannel.done(Bizplaner.logOnEnd)
+    bpWithCipherChannel.done(Tracker.logOnEnd)
     
   }
 
@@ -300,7 +300,7 @@ function cleanInbox() {
     log(log.DEBUG, bpZixiaChannel.getName() + ' QUERY_STRING: ' + bpZixiaChannel.getQueryString())
     
     bpZixiaChannel.use(
-      Bizplaner.logOnStart
+      Tracker.logOnStart
       , Mailer.labelAdd_Mike
       , Mailer.labelAdd_NotBizPlan
 
@@ -319,7 +319,7 @@ function cleanInbox() {
       , Mailer.labelDel_Bug
     )
 
-    bpZixiaChannel.done(Bizplaner.logOnEnd)
+    bpZixiaChannel.done(Tracker.logOnEnd)
 
   }
   
@@ -349,7 +349,7 @@ function cleanInbox() {
       , labels: [ 'inbox', '-trash' ]
       , dayspan: DAYSPAN
       , query: [ '("邮箱发来的超大附件" OR "邮箱发来的云附件" OR (filename:pptx OR filename:ppt OR filename:pdf))'
-                , '(to:(zixia@pre-angel.com OR zixia@preangelpartners.com) NOT to:(bp@pre-angel.com OR bp@preangelpartners.com))'
+                , '(to:(zixia@pre-angel.com OR zixia@preangelpartners.com OR zixia@preangelfund.com) NOT to:(bp@pre-angel.com OR bp@preangelpartners.com))'
                ].join(' ')
       , doneLabel: 'OutOfZixiaChannel'
       , limit: LIMIT
@@ -367,7 +367,7 @@ function cleanInbox() {
     log(log.DEBUG, zixiaChannel.getName() + ' QUERY_STRING: [' + zixiaChannel.getQueryString() + ']')
     
     zixiaChannel.use(
-      Bizplaner.logOnStart
+      Tracker.logOnStart
       , Mailer.labelAdd_Mike
       , Mailer.labelAdd_NotBizPlan
 
@@ -387,7 +387,7 @@ function cleanInbox() {
       , Mailer.labelDel_Bug
     )
     
-    zixiaChannel.done(Bizplaner.logOnEnd)
+    zixiaChannel.done(Tracker.logOnEnd)
     
   } 
   
@@ -437,7 +437,7 @@ function cleanInbox() {
     log(log.DEBUG, formChannel.getName() + ' QUERY_STRING: [' + formChannel.getQueryString() + ']')
     
     formChannel.use(
-      Bizplaner.logOnStart
+      Tracker.logOnStart
       , Mailer.labelAdd_Bug
 
       , Mailer.labelAdd_Mike
@@ -460,7 +460,7 @@ function cleanInbox() {
       , Mailer.labelDel_Bug
     )
     
-    formChannel.done(Bizplaner.logOnEnd)
+    formChannel.done(Tracker.logOnEnd)
     
   }   
   
@@ -498,7 +498,7 @@ function cleanInbox() {
     log(log.DEBUG, applyChannel.getName() + ' QUERY_STRING: [' + applyChannel.getQueryString() + ']')
     
     applyChannel.use(
-      Bizplaner.logOnStart
+      Tracker.logOnStart
       , Mailer.labelAdd_BizPlan
       , Mailer.labelAdd_Mike
       , Mailer.labelAdd_Bug
@@ -515,7 +515,7 @@ function cleanInbox() {
       , Mailer.labelDel_Bug
     )
     
-    applyChannel.done(Bizplaner.logOnEnd)
+    applyChannel.done(Tracker.logOnEnd)
     
   }   
   
@@ -560,7 +560,7 @@ function cleanInbox() {
     log(log.DEBUG, intviuChannel.getName() + ' QUERY_STRING: [' + intviuChannel.getQueryString() + ']')
     
     intviuChannel.use(
-      Bizplaner.logOnStart
+      Tracker.logOnStart
       , Mailer.labelAdd_BizPlan
       , Mailer.labelAdd_Mike
       , Mailer.labelAdd_Bug
@@ -576,7 +576,7 @@ function cleanInbox() {
       , Mailer.labelDel_Bug
     )
     
-    intviuChannel.done(Bizplaner.logOnEnd)
+    intviuChannel.done(Tracker.logOnEnd)
     
   }   
 

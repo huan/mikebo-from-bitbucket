@@ -10,25 +10,26 @@ var Mailer = (function () {
   Mailer.skipFromMyContacts = skipFromMyContacts
   Mailer.forwardBizplan = forwardBizplan
 
+  Mailer.replySubmitGuideIfMailToBpAddress = replySubmitGuideIfMailToBpAddress
+
   
   /**
   *
   * Labels
   *
   */
-  Mailer.labelAdd_BizPlan = labelAdd_BizPlan
+  Mailer.labelAdd_BizPlan = function (req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('BizPlan')); next() }
   
-  Mailer.labelAdd_NotBizPlan = labelAdd_NotBizPlan
-  Mailer.labelDel_NotBizPlan = labelDel_NotBizPlan
+  Mailer.labelAdd_NotBizPlan = function (req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('NotBizPlan')); next() }
+  Mailer.labelDel_NotBizPlan = function (req, res, next) { req.getThread().removeLabel(GmailApp.getUserLabelByName('NotBizPlan')); next() }
   
-  Mailer.labelAdd_Mike = labelAdd_Mike
-  Mailer.labelDel_Mike = labelDel_Mike
+  Mailer.labelAdd_Mike = function (req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('Mike/MikeBo')); next() }
+  Mailer.labelDel_Mike = function (req, res, next) { req.getThread().removeLabel(GmailApp.getUserLabelByName('Mike/MikeBo')); next() }
   
-  Mailer.labelAdd_Bug = labelAdd_Bug
-  Mailer.labelDel_Bug = labelDel_Bug
+  Mailer.labelAdd_Bug = function (req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('Mike/BugBo')); next() }
+  Mailer.labelDel_Bug = function (req, res, next) { req.getThread().removeLabel(GmailApp.getUserLabelByName('Mike/BugBo')); next() }
   
-  Mailer.labelAdd_ToBeDeleted = labelAdd_ToBeDeleted
-  Mailer.replySubmitGuideIfMailToBpAddress = replySubmitGuideIfMailToBpAddress
+  Mailer.labelAdd_ToBeDeleted = function (req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('ToBeDeleted')); next() }
   
   
   /**
@@ -46,18 +47,11 @@ var Mailer = (function () {
   
   ////////////////////////////////////////////////////////////////////////////////
   
-  function labelAdd_BizPlan(req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('BizPlan')); next() }
   
-  function labelAdd_NotBizPlan(req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('NotBizPlan')); next() }
-  function labelDel_NotBizPlan(req, res, next) { req.getThread().removeLabel(GmailApp.getUserLabelByName('NotBizPlan')); next() }
+  
 
-  function labelAdd_Mike(req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('Mike/MikeBo')); next() }
-  function labelDel_Mike(req, res, next) { req.getThread().removeLabel(GmailApp.getUserLabelByName('Mike/MikeBo')); next() }
  
-  function labelAdd_Bug(req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('Mike/BugBo')); next() }
-  function labelDel_Bug(req, res, next) { req.getThread().removeLabel(GmailApp.getUserLabelByName('Mike/BugBo')); next() }
 
-  function labelAdd_ToBeDeleted(req, res, next) { req.getThread().addLabel(GmailApp.getUserLabelByName('ToBeDeleted')); next() }
 
   /**
   * 2. trash it.
@@ -90,8 +84,7 @@ var Mailer = (function () {
     var from = firstMessage.getReplyTo() || firstMessage.getFrom()
     
     if (res.gasContact.isMyContact(from)) {
-      req.errors.push('skipped my contact:' + from)
-      return log(log.DEBUG, req.getChannelName() + ': skipped my contact' + from)
+      return req.errors.push('skipped my contact:' + from)
     } 
     return next()
   }
@@ -114,7 +107,7 @@ var Mailer = (function () {
       }
     }
     
-    next()
+    return next()
   }
   
   /*********************************************
@@ -212,16 +205,17 @@ var Mailer = (function () {
       from: 'zixia@zixia.net'
     })
     
+    var thread = message.getThread()
     var fwdMessage
     
     var ttl = 7
     while (ttl-- > 0) {
+      // not work???
+      GmailApp.refreshThread(thread)
       
-      var threadId = message.getThread().getId()
-      
-      // GmailApp.refreshThread(thread) not work???
       // must use GmailApp getThread, for force reload
-      var thread = GmailApp.getThreadById(threadId)
+//      var threadId = message.getThread().getId()
+//      var thread = GmailApp.getThreadById(threadId)
       
       log(log.NOTICE, 'forward ttl:%s, message num:%s', ttl, thread.getMessages().length)
       

@@ -227,7 +227,7 @@ var Parser = (function () {
     
     req.table = {
       name: startup.founder
-      , company: startup.company
+      , company: startup.company || startup.name
       , email: startup.email
       , mobile: startup.mobile
     }
