@@ -205,17 +205,16 @@ var Mailer = (function () {
       from: 'zixia@zixia.net'
     })
     
-    var thread = message.getThread()
     var fwdMessage
     
     var ttl = 7
     while (ttl-- > 0) {
-      // not work???
-      GmailApp.refreshThread(thread)
+      // not work??? (20160122 failed again)
+//      GmailApp.refreshThread(thread)
       
       // must use GmailApp getThread, for force reload
-//      var threadId = message.getThread().getId()
-//      var thread = GmailApp.getThreadById(threadId)
+      var threadId = message.getThread().getId()
+      var thread = GmailApp.getThreadById(threadId)
       
       log(log.NOTICE, 'forward ttl:%s, message num:%s', ttl, thread.getMessages().length)
       

@@ -231,7 +231,7 @@ var Parser = (function () {
       , email: startup.email
       , mobile: startup.mobile
     }
-    next()
+    return next()
   }
 
 

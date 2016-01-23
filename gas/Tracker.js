@@ -22,32 +22,30 @@ var Tracker = (function () {
         , req.getChannelName ? req.getChannelName() : 'unknown'
         , req.getThread      ? req.getThread().getFirstMessageSubject() : 'unknown'
        )
-    next()
+    return next()
   }
   
   function logOnEnd(req, res, next) {
-    var errorMsg
+    var errorMsg = ''
     
     if (req.errors.length) {
       errorMsg = req.errors.map(function (e) { 
         if (e instanceof Error) {
           return e.name + ':' + e.message + ':' + e.stack
         } else {
-          return e
+          return e || ''
         }
       }).join(',')
-    } else { 
-      errorMsg = ''
     }
     
     log(log.NOTICE, 'C(%s/%ss)[%s] %s'
         , req.getChannelName ? req.getChannelName() : 'unknown'
         , Math.floor((new Date() - req.startTime)/1000)
         
-        , req.getThread ? req.getThread().getFirstMessageSubject() : 'unknown'
+        , req.getMessage ? req.getMessage().getSubject() : 'unknown'
         , errorMsg
        )
-    next()
+    return next()
   }
   
 }())

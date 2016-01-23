@@ -508,6 +508,7 @@ function cleanInbox() {
       
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
+      , Ticketor.mediumPriority
 //      , Ticketor.replyOrCreate
 
       , Mailer.markRead
@@ -570,6 +571,7 @@ function cleanInbox() {
       
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
+      , Ticketor.highPriority
 //      , Ticketor.replyOrCreate
 
       , Mailer.trashMessage

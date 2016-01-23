@@ -32,7 +32,7 @@ var Ticketor = (function () {
   var Contact = MyFreshdesk.Contact
   
   var ID_AGENT_MARY = 5008844005
-  var ID_AGENT_ZIXIA = 5006515033
+  var ID_AGENT_ZIXIA = 5006515033 // GasFreshdesk.Agent.list({ email = 'zixia@zixia.net' })[0].getId()
 
   var Ticketor = function () {
   }
@@ -43,6 +43,9 @@ var Ticketor = (function () {
   Ticketor.tryToPair = tryToPair
   Ticketor.noteOrCreate = noteOrCreate
   Ticketor.replyOrCreate = replyOrCreate
+  
+  Ticketor.mediumPriority = function (req, res, next) { req.ticket.mediumPriority(); next() }
+  Ticketor.highPriority = function (req, res, next) { req.ticket.highPriority(); next() }
   
   return Ticketor
   
