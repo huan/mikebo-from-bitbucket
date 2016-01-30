@@ -216,7 +216,7 @@ var Mailer = (function () {
       var threadId = message.getThread().getId()
       var thread = GmailApp.getThreadById(threadId)
       
-      log(log.NOTICE, 'forward ttl:%s, message num:%s', ttl, thread.getMessages().length)
+      log(log.DEBUG, 'forward ttl:%s, message num:%s', ttl, thread.getMessages().length)
       
       var messages = thread.getMessages().filter(function(m) {
 //        log(log.NOTICE, 'isInTrash:%s, from:%s, to:%s', m.isInTrash(), m.getFrom(), m.getTo())

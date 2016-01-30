@@ -10,10 +10,42 @@ var Bizplaner = (function () {
   Bizplaner.summaryBizPlan = summaryBizPlan
   Bizplaner.analyzeDetails = analyzeDetails
 
+  Bizplaner.ibot = ibot
+  
   return Bizplaner
   
   
   ///////////////////////////////////////////////////////////
+  
+  function ibot(req, res, next) {
+    var message = req.getMessage()
+    var attachments = message.getAttachments()
+    
+    var attachment
+    var MAX_SIZE = 8 * 1024 * 1024 - message.getBody().length
+    
+    log(log.DEBUG, 'MAX_SIZE: %s', MAX_SIZE)
+    
+    for (var i in attachments) {
+      if (attachments[i].getSize() > MAX_SIZE) {
+        continue
+      }
+      attachment = attachments[i]
+      break
+    }
+    
+//    req.ibot = IBot.query({
+//      from: message.getReplyTo() || message.getFrom()
+//      , to: message.getTo()
+//      , subject: message.getSubject()
+//      , body: message.getBody()
+//      , attachment: attachment
+//    })
+    
+    req.errors.push('iboted')
+    
+    return next()
+  }
   
   /**
   *

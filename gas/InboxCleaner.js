@@ -130,9 +130,7 @@ function cleanInbox() {
       
       , doneLabel: 'OutOfBulkChannel'
       , limit: LIMIT
-      , res: {
-        gasContact: gasContact
-      }
+      , res: { gasContact: gasContact }
     })
     
     // DEBUG
@@ -167,6 +165,8 @@ function cleanInbox() {
       
       , Mailer.labelAdd_ToBeDeleted
       , Mailer.moveToArchive
+
+      , Bizplaner.ibot
       
       , Mailer.labelDel_Bug
     )
@@ -248,6 +248,8 @@ function cleanInbox() {
       , Ticketor.process
       , Mailer.trashBizplan
 
+      , Bizplaner.ibot
+
       , Mailer.labelDel_Bug
     )
 
@@ -316,6 +318,9 @@ function cleanInbox() {
       , Ticketor.process
       , Mailer.trashBizplan
       
+      , Bizplaner.ibot
+      , Ticketor.noteIbot
+
       , Mailer.labelDel_Bug
     )
 
@@ -508,8 +513,8 @@ function cleanInbox() {
       
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
-      , Ticketor.mediumPriority
 //      , Ticketor.replyOrCreate
+      , Ticketor.mediumPriority
 
       , Mailer.markRead
       , Mailer.moveToArchive

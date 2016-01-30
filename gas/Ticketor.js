@@ -30,9 +30,13 @@ var Ticketor = (function () {
   var MyFreshdesk = new GasFreshdesk(FRESHDESK_URL, FRESHDESK_KEY)
   var Ticket = MyFreshdesk.Ticket
   var Contact = MyFreshdesk.Contact
+  var Agent = MyFreshdesk.Agent
   
-  var ID_AGENT_MARY = 5008844005
-  var ID_AGENT_ZIXIA = 5006515033 // GasFreshdesk.Agent.list({ email = 'zixia@zixia.net' })[0].getId()
+//  var ID_AGENT_MARY = 5008844005
+//  var ID_AGENT_ZIXIA = 5006515033
+
+  var ID_AGENT_ZIXIA = Agent.list({ email: 'zixia@zixia.net' })[0].getId()
+  var ID_AGENT_MARY  = Agent.list({ email: 'mary@aka.cn'     })[0].getId()
 
   var Ticketor = function () {
   }
@@ -47,9 +51,29 @@ var Ticketor = (function () {
   Ticketor.mediumPriority = function (req, res, next) { req.ticket.mediumPriority(); next() }
   Ticketor.highPriority = function (req, res, next) { req.ticket.highPriority(); next() }
   
+  Ticketor.assignMary = function (req, res, next) { req.ticket.assign(ID_AGENT_MARY); next() }
+  
+  Ticketor.noteIbot = noteIbot
+  
   return Ticketor
   
   /////////////////////////////////////////////////////////// 
+  
+  function noteIbot(req, res, next) {
+    var ticket = req.ticket
+    var ibot = req.ibot
+    
+    if (ticket && ibot) { 
+      ticket.note({
+        body_html: JSON.stringify(ibot)
+        , private: true
+      })
+      req.errors.push('ibot reported to ticket#' + ticket.getId())
+    }
+    
+    next()
+  }
+
   
   function tryToPair(req, res, next) {
     var email = req.table.email
@@ -73,7 +97,7 @@ var Ticketor = (function () {
     
     req.errors.push('paired ticket#' + ticketId )
     
-    next()
+    return next()
   }
   
   /**
@@ -182,7 +206,7 @@ var Ticketor = (function () {
           noteMsg.concat(': ', req.bizplan.deliverTo)
         }
         
-        ticket.assign(ID_AGENT_ZIXIA)
+//        ticket.assign(ID_AGENT_ZIXIA)
         ticket.close()
       }
       
@@ -199,7 +223,7 @@ var Ticketor = (function () {
 
     req.errors.push(noteMsg)
     
-    next()
+    return next()
   }
   
 
@@ -272,7 +296,7 @@ var Ticketor = (function () {
 //log(log.NOTICE, 'after new Ticket')    
     
     req.errors.push('created ticket #' + req.ticket.getId())
-    next()
+    return next()
   }
   
   
