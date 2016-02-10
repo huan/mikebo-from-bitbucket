@@ -76,10 +76,11 @@ var Ticketor = (function () {
 
   
   function tryToPair(req, res, next) {
-    var email = req.table.email
+    var email = GasContact.getEmailAddress(req.table.email)
     
-    var contacts = Contact.list({ email: email })
-    log(log.DEBUG, 'paired contacts[%s] for %s', contacts, email)
+    if (email) var contacts = Contact.list({ email: email })
+    
+    log(log.DEBUG, 'pairing contacts for %s', email)
 
     if (contacts && contacts.length) {
       var contactId = contacts[0].getId()
