@@ -7,8 +7,10 @@ var Mailer = (function () {
   }
   
   Mailer.trashBizplan = trashBizplan
-  Mailer.skipFromMyContacts = skipFromMyContacts
   Mailer.forwardBizplan = forwardBizplan
+
+  Mailer.skipFromMyContacts = skipFromMyContacts
+  Mailer.skipFromInvalid    = skipFromInvalid
 
   Mailer.replySubmitGuideIfMailToBpAddress = replySubmitGuideIfMailToBpAddress
 
@@ -77,15 +79,28 @@ var Mailer = (function () {
   *
   */
   function skipFromMyContacts(req, res, next) {
-    if (!res.gasContact) throw Error('res.gasContact not found!')
+//    if (!res.gasContact) throw Error('res.gasContact not found!')
     
     var firstMessage = req.getThread().getMessages()[0]
     
     var from = firstMessage.getReplyTo() || firstMessage.getFrom()
     
-    if (res.gasContact.isMyContact(from)) {
+    if (GasContact.isMyContact(from)) {
       return req.errors.push('skipped my contact:' + from)
     } 
+    return next()
+  }
+  
+  function skipFromInvalid(req, res, next) {
+    var message = req.getMessage()
+    var from = message.getReplyTo() || message.getFrom()
+    
+    var email = GasContact.getEmailName(from)
+    
+    if (!email) {
+      return req.error.push('skipped empty mail from:' + from)
+    }
+    
     return next()
   }
   

@@ -5,19 +5,34 @@ var GasContact = (function() {
   
   var EMAILS = []
   
-  var GasContact = function () {
-    return {
-      isMyContact: isMyContact
-    }
+  var STATIC_METHODS = {
+      reloadContacts:  reloadContacts
+    , getEmailName:    getEmailName
+    , getEmailAddress: getEmailAddress
+    , isBeijingMobile: isBeijingMobile
+    , isMyContact:     isMyContact
+    
+    // for test
+    , binary: binary
   }
   
-  GasContact.reloadContacts = reloadContacts
-  GasContact.getEmailName = getEmailName
-  GasContact.getEmailAddress = getEmailAddress
-  GasContact.isBeijingMobile = isBeijingMobile
-  
-  // for test
-  GasContact.binary = binary
+  var GasContact = function () {
+    INSTANCE_METHODS = {
+    }
+    
+    var vm = {}
+    
+    // export static method on Instance
+    Object.keys(STATIC_METHODS)  .forEach(function (k) { vm[k] = STATIC_METHODS[k]   })
+    // export instance methods on Instance
+    Object.keys(INSTANCE_METHODS).forEach(function (k) { vm[k] = INSTANCE_METHODS[k] })
+    
+    return vm
+    
+  }
+
+  // export static methods on Class
+  Object.keys(STATIC_METHODS).forEach(function (k) { GasContact[k] = STATIC_METHODS[k] })
   
   return GasContact
   
@@ -55,7 +70,13 @@ var GasContact = (function() {
   
   function binary(list, value)
   {
-    // very important for compare as string!
+    /**
+    * 
+    * very important for compare as string!
+    * or we could got NaN , which is much trouble for comparing...
+    * https://stackoverflow.com/questions/34388974/
+    *
+    */
     if ((typeof value)!='string') value = value.toString()
     
     var left = 0, right = list.length - 1, mid = 0
@@ -205,3 +226,7 @@ var GasContact = (function() {
   }
 
 }())
+
+function testGasContact() {
+  Logger.log(GasContact.getEmailAddress('MD@hguyj.ggradual.xyz Aaron Singleton MD <Aaron.Singleton>'))
+}

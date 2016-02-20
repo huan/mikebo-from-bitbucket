@@ -26,7 +26,7 @@ function cleanInbox() {
   } // Class GmailChannel is ready for use now!
 
 
-  var gasContact = new GasContact()
+//  var gasContact = new GasContact()
 
   var startTime = new Date()
   log(log.DEBUG, 'InboxCleaner starting...')
@@ -130,7 +130,7 @@ function cleanInbox() {
       
       , doneLabel: 'OutOfBulkChannel'
       , limit: LIMIT
-      , res: { gasContact: gasContact }
+      , res: {}
     })
     
     // DEBUG
@@ -147,7 +147,6 @@ function cleanInbox() {
 //      , limit: 1
 //      , res: {
 //        Ticket: MyFreshdesk.Ticket
-//        , gasContact: gasContact
 //      }
 //    })
     
@@ -156,10 +155,11 @@ function cleanInbox() {
 
     bulkChannel.use(
       Tracker.logOnStart
-      , Mailer.labelAdd_Mike
+//      , Mailer.labelAdd_Mike
       
+      , Mailer.skipFromInvalid
       , Mailer.skipFromMyContacts
-      , Mailer.labelAdd_Bug
+//      , Mailer.labelAdd_Bug
 
       , Mailer.replySubmitGuideIfMailToBpAddress
       
@@ -168,7 +168,7 @@ function cleanInbox() {
 
       , Bizplaner.ibot
       
-      , Mailer.labelDel_Bug
+//      , Mailer.labelDel_Bug
     )
     
     return bulkChannel.done(Tracker.logOnEnd)
@@ -210,7 +210,7 @@ function cleanInbox() {
                ].join(' ')
       , doneLabel: 'OutOfBpCipherChannel'
       , limit: LIMIT
-      , res: { gasContact: gasContact }
+      , res: {}
     })
     
 //    bpWithCipherChannel = new GmailChannel({
@@ -225,7 +225,6 @@ function cleanInbox() {
 //      , limit: LIMIT
 //      , res: {
 //        Ticket: MyFreshdesk.Ticket
-//        , gasContact: gasContact
 //      }
 //    })
     
@@ -233,15 +232,16 @@ function cleanInbox() {
     
     bpWithCipherChannel.use(
       Tracker.logOnStart
-      , Mailer.labelAdd_Mike
+//      , Mailer.labelAdd_Mike
       , Mailer.labelAdd_NotBizPlan
-      
+
+      , Mailer.skipFromInvalid      
       , Mailer.skipFromMyContacts
       , Bizplaner.skipInvalidBizPlan
       
       , Mailer.labelDel_NotBizPlan
       , Mailer.labelAdd_BizPlan
-      , Mailer.labelAdd_Bug
+//      , Mailer.labelAdd_Bug
       
       , Bizplaner.summaryBizPlan
       , Ticketor.create
@@ -250,7 +250,7 @@ function cleanInbox() {
 
       , Bizplaner.ibot
 
-      , Mailer.labelDel_Bug
+//      , Mailer.labelDel_Bug
     )
 
     bpWithCipherChannel.done(Tracker.logOnEnd)
@@ -288,7 +288,7 @@ function cleanInbox() {
                ].join(' ')
       , doneLabel: 'OutOfBpZixiaChannel'
       , limit: LIMIT
-      , res: { gasContact: gasContact }
+      , res: {}
     })
     
 //    bpChannel = new GmailChannel({
@@ -303,15 +303,16 @@ function cleanInbox() {
     
     bpZixiaChannel.use(
       Tracker.logOnStart
-      , Mailer.labelAdd_Mike
+//      , Mailer.labelAdd_Mike
       , Mailer.labelAdd_NotBizPlan
 
+      , Mailer.skipFromInvalid
       , Mailer.skipFromMyContacts
       , Bizplaner.skipInvalidBizPlan
 
       , Mailer.labelDel_NotBizPlan
       , Mailer.labelAdd_BizPlan
-      , Mailer.labelAdd_Bug
+//      , Mailer.labelAdd_Bug
       
       , Bizplaner.summaryBizPlan
       , Ticketor.create
@@ -321,7 +322,7 @@ function cleanInbox() {
       , Bizplaner.ibot
       , Ticketor.noteIbot
 
-      , Mailer.labelDel_Bug
+//      , Mailer.labelDel_Bug
     )
 
     bpZixiaChannel.done(Tracker.logOnEnd)
@@ -358,7 +359,7 @@ function cleanInbox() {
                ].join(' ')
       , doneLabel: 'OutOfZixiaChannel'
       , limit: LIMIT
-      , res: { gasContact: gasContact }
+      , res: {}
     })
     
 //    zixiaChannel = new GmailChannel({
@@ -366,22 +367,23 @@ function cleanInbox() {
 //      , query: '为我的创业项目“去耍”寻求筹款'
 //      , labels: []
 //      , doneLabel: null
-//      , res: { gasContact: gasContact }
+//      , res: {}
 //    })
 
     log(log.DEBUG, zixiaChannel.getName() + ' QUERY_STRING: [' + zixiaChannel.getQueryString() + ']')
     
     zixiaChannel.use(
       Tracker.logOnStart
-      , Mailer.labelAdd_Mike
+//      , Mailer.labelAdd_Mike
       , Mailer.labelAdd_NotBizPlan
 
+      , Mailer.skipFromInvalid
       , Mailer.skipFromMyContacts
       , Bizplaner.skipInvalidBizPlan
 
       , Mailer.labelDel_NotBizPlan
       , Mailer.labelAdd_BizPlan
-      , Mailer.labelAdd_Bug
+//      , Mailer.labelAdd_Bug
       
       , Bizplaner.summaryBizPlan
       , Ticketor.create
@@ -389,7 +391,7 @@ function cleanInbox() {
       , Mailer.forwardBizplan          
       , Mailer.trashBizplan
       
-      , Mailer.labelDel_Bug
+//      , Mailer.labelDel_Bug
     )
     
     zixiaChannel.done(Tracker.logOnEnd)
@@ -428,7 +430,7 @@ function cleanInbox() {
       , query: 'to:bp'
       , doneLabel: 'OutOfFormChannel'
       , limit: LIMIT
-      , res: { gasContact: gasContact }
+      , res: {}
     })
     
     //  formChannel = new GmailChannel({
@@ -443,9 +445,9 @@ function cleanInbox() {
     
     formChannel.use(
       Tracker.logOnStart
-      , Mailer.labelAdd_Bug
+//      , Mailer.labelAdd_Bug
 
-      , Mailer.labelAdd_Mike
+//      , Mailer.labelAdd_Mike
       , Mailer.labelAdd_BizPlan
       
       , Parser.jsForm2Table
@@ -462,7 +464,7 @@ function cleanInbox() {
       , Mailer.labelAdd_ToBeDeleted
       , Mailer.moveToArchive
 
-      , Mailer.labelDel_Bug
+//      , Mailer.labelDel_Bug
     )
     
     formChannel.done(Tracker.logOnEnd)
@@ -497,7 +499,7 @@ function cleanInbox() {
       , query: 'from:mikecrm.com to:(zixia OR bp)'
       , doneLabel: 'OutOfApplyChannel'
       , limit: LIMIT
-      , res: { gasContact: gasContact }
+      , res: {}
     })
     
     log(log.DEBUG, applyChannel.getName() + ' QUERY_STRING: [' + applyChannel.getQueryString() + ']')
@@ -505,8 +507,8 @@ function cleanInbox() {
     applyChannel.use(
       Tracker.logOnStart
       , Mailer.labelAdd_BizPlan
-      , Mailer.labelAdd_Mike
-      , Mailer.labelAdd_Bug
+//      , Mailer.labelAdd_Mike
+//      , Mailer.labelAdd_Bug
 
       , Parser.mikeCrm2Table
       , Parser.table2Apply
@@ -518,7 +520,7 @@ function cleanInbox() {
 
       , Mailer.markRead
       , Mailer.moveToArchive
-      , Mailer.labelDel_Bug
+//      , Mailer.labelDel_Bug
     )
     
     applyChannel.done(Tracker.logOnEnd)
@@ -560,7 +562,7 @@ function cleanInbox() {
       , conversation: false
       
       , limit: LIMIT
-      , res: { gasContact: gasContact }
+      , res: {}
     })
     
     log(log.DEBUG, intviuChannel.getName() + ' QUERY_STRING: [' + intviuChannel.getQueryString() + ']')
@@ -568,8 +570,8 @@ function cleanInbox() {
     intviuChannel.use(
       Tracker.logOnStart
       , Mailer.labelAdd_BizPlan
-      , Mailer.labelAdd_Mike
-      , Mailer.labelAdd_Bug
+//      , Mailer.labelAdd_Mike
+//      , Mailer.labelAdd_Bug
 
       , Parser.intviu2Table
       , Parser.table2Interview
@@ -580,7 +582,7 @@ function cleanInbox() {
 //      , Ticketor.replyOrCreate
 
       , Mailer.trashMessage
-      , Mailer.labelDel_Bug
+//      , Mailer.labelDel_Bug
     )
     
     intviuChannel.done(Tracker.logOnEnd)
