@@ -155,14 +155,18 @@ function cleanInbox() {
 
     bulkChannel.use(
       Tracker.logOnStart
-//      , Mailer.labelAdd_Mike
       
-      , Mailer.skipFromInvalid
+      , Mailer.skipFromInvalidSender
       , Mailer.skipFromMyContacts
-//      , Mailer.labelAdd_Bug
 
       , Mailer.replySubmitGuideIfMailToBpAddress
       
+      , Bizplaner.summaryBizPlan
+      , Parser.mail2Table
+      , Ticketor.tryToPair
+      , Ticketor.noteOrCreate
+      , Ticketor.close
+
       , Mailer.labelAdd_ToBeDeleted
       , Mailer.moveToArchive
 
@@ -235,7 +239,7 @@ function cleanInbox() {
 //      , Mailer.labelAdd_Mike
       , Mailer.labelAdd_NotBizPlan
 
-      , Mailer.skipFromInvalid      
+      , Mailer.skipFromInvalidSender
       , Mailer.skipFromMyContacts
       , Bizplaner.skipInvalidBizPlan
       
@@ -306,7 +310,7 @@ function cleanInbox() {
 //      , Mailer.labelAdd_Mike
       , Mailer.labelAdd_NotBizPlan
 
-      , Mailer.skipFromInvalid
+      , Mailer.skipFromInvalidSender
       , Mailer.skipFromMyContacts
       , Bizplaner.skipInvalidBizPlan
 
@@ -377,7 +381,7 @@ function cleanInbox() {
 //      , Mailer.labelAdd_Mike
       , Mailer.labelAdd_NotBizPlan
 
-      , Mailer.skipFromInvalid
+      , Mailer.skipFromInvalidSender
       , Mailer.skipFromMyContacts
       , Bizplaner.skipInvalidBizPlan
 

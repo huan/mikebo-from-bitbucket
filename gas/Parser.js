@@ -16,6 +16,7 @@ var Parser = (function () {
   * Public Static Methods
   *
   */
+  Parser.mail2Table = mail2Table
   Parser.mikeCrm2Table = mikeCrm2Table
   Parser.jsForm2Table = jsForm2Table
   Parser.intviu2Table = intviu2Table
@@ -34,6 +35,25 @@ var Parser = (function () {
   
   /////////////////////////////////////////////////////////////////
   
+  function mail2Table(req, res, next) {
+    var message = req.getMessage()
+    var from = message.getReplyTo() || message.getFrom()
+    
+    var name = GasContact.getEmailName(from)
+    var email = GasContact.getEmailAddress(from)
+    
+    req.tableHtml = message.getBody()
+    
+    req.table = {
+      name: name
+      , company: message.getSubject()
+      , email: email
+    }
+
+    next()  
+  }
+
+
   function mikeCrm2Table(req, res, next) {
     var message = req.getThread().getMessages()[0]
     var body = message.getBody()
@@ -222,7 +242,7 @@ var Parser = (function () {
     
     
     if (!startup.email) {
-      return req.errors.push('skipped because no startup.email for '.concat(startup.name))
+      return req.pushError('skipped because no startup.email for '.concat(startup.name))
     }
     
     req.table = {

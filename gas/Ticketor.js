@@ -41,8 +41,9 @@ var Ticketor = (function () {
   var Ticketor = function () {
   }
   
-  Ticketor.create = create
+  Ticketor.create  = create
   Ticketor.process = process
+  Ticketor.close   = function (req, res, next) { req.ticket.close(); next() }
   
   Ticketor.tryToPair = tryToPair
   Ticketor.noteOrCreate = noteOrCreate
@@ -68,16 +69,18 @@ var Ticketor = (function () {
         body_html: JSON.stringify(ibot)
         , private: true
       })
-      req.errors.push('ibot reported to ticket#' + ticket.getId())
+      req.pushError('ibot reported to ticket#' + ticket.getId())
     }
     
-    next()
+    return next()
   }
 
   
   function tryToPair(req, res, next) {
-    var email = GasContact.getEmailAddress(req.table.email)
+    var email = (req.table && req.table.email) || req.getMessage().getReplyTo() || req.getMessage().getFrom()
     
+    email = GasContact.getEmailAddress(email)
+        
     if (email) var contacts = Contact.list({ email: email })
     
     log(log.DEBUG, 'pairing contacts for %s', email)
@@ -96,9 +99,7 @@ var Ticketor = (function () {
     
     var ticketId = req.ticket ? req.ticket.getId() : '?'
     
-    req.errors.push('paired ticket#' + ticketId )
-    
-    return next()
+    return next('paired ticket#' + ticketId )
   }
   
   /**
@@ -112,28 +113,25 @@ var Ticketor = (function () {
         
     var ticket = req.ticket
     
+    // 1. existing ticket
     if (ticket) { 
+      ticket.open()
       ticket.note({
         body_html: tableHtml
         , private: true
       })
-      ticket.open()
-      req.errors.push('added note to ticket#' + ticket.getId())
-      
-    } else { // new ticket
-      
-      ticket = new Ticket({
-        description_html: tableHtml
-        , subject: table.company || table.name || '未填写'
-        , name: table.name
-        , email: table.email
-      })
-      req.ticket = ticket
-      req.errors.push('created note as ticket#' + ticket.getId())
-                    
-    }
+      return next('added note to ticket#' + ticket.getId())
+    } 
     
-    next()
+    // 2. new ticket    
+    ticket = new Ticket({
+      description_html: tableHtml
+      , subject: table.company || table.name || '未填写'
+      , name: table.name
+      , email: table.email
+    })
+    req.ticket = ticket
+    return next('created note as ticket#' + ticket.getId())
   }
 
   /**
@@ -147,6 +145,7 @@ var Ticketor = (function () {
         
     var ticket = req.ticket
     
+    // 1. existing ticket
     if (ticket) { 
       ticket.reply({
         body_html: tableHtml
@@ -154,22 +153,20 @@ var Ticketor = (function () {
         // , cc_emails: [ table.email ]
       })
       ticket.open()
-      req.errors.push('replied ticket#' + ticket.getId())
       
-    } else { // new ticket
-      
-      ticket = new Ticket({
-        description_html: tableHtml
-        , subject: table.company
-        , name: table.name
-        , email: table.email
-      })
-      req.ticket = ticket
-      req.errors.push('created reply as ticket#' + ticket.getId())
-                    
+      return next('replied ticket#' + ticket.getId())
     }
     
-    next()
+    // 2. create new ticket
+    ticket = new Ticket({
+      description_html: tableHtml
+      , subject: table.company
+      , name: table.name
+      , email: table.email
+    })
+    req.ticket = ticket
+    
+    return next('created reply as ticket#' + ticket.getId())
   }
 
   function process(req, res, next) {
@@ -178,6 +175,7 @@ var Ticketor = (function () {
     var ticket = req.ticket
     var bizplan = req.bizplan
 
+    var shouldClose = false
     var noteMsg = ''
     
     if (analyze) {
@@ -201,14 +199,11 @@ var Ticketor = (function () {
         ticket.assign(ID_AGENT_MARY)
         
       } else {
-        
         noteMsg = '不碰指定发给他人的BP' 
-        if (req.bizplan && req.bizplan.deliverTo) {
-          noteMsg.concat(': ', req.bizplan.deliverTo)
+        shouldClose = true
+        if (req.startup && req.startup.deliverTo) {
+          noteMsg = noteMsg.concat('(', req.startup.deliverTo, ')')
         }
-        
-//        ticket.assign(ID_AGENT_ZIXIA)
-        ticket.close()
       }
       
     } else { // no analyze
@@ -222,9 +217,9 @@ var Ticketor = (function () {
       , private: true
     })
 
-    req.errors.push(noteMsg)
+    if (shouldClose) ticket.close()
     
-    return next()
+    return next(noteMsg)
   }
   
 
@@ -234,7 +229,7 @@ var Ticketor = (function () {
   *
   */
   function create(req, res, next) {
-    log(log.DEBUG, 'entered Ticketor.create')
+//    log(log.DEBUG, 'entered Ticketor.create')
 
     var bizplan = req.bizplan
     
@@ -263,7 +258,7 @@ var Ticketor = (function () {
     if (recipients.length > 3) {   
       // need not CC to them
       bizplan.to = ''  
-      req.errors.push('Too many(' + recipients.length + ') recipients. will not cc anybody.')
+      req.pushError('Too many(' + recipients.length + ') recipients. will not cc anybody.')
     }
     
     /**
@@ -296,13 +291,10 @@ var Ticketor = (function () {
     req.ticket = new Ticket(ticketObj)
 //log(log.NOTICE, 'after new Ticket')    
     
-    req.errors.push('created ticket #' + req.ticket.getId())
-    return next()
+    return next('created ticket #' + req.ticket.getId())
   }
   
-  
-  
-  
+    
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
   //

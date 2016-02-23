@@ -170,10 +170,19 @@ var GasContact = (function() {
     }
     
     var RE = /([^<\s]+@[^>\s]+)>?$/
-    var email = RE.exec(emailString)
+    var match = RE.exec(emailString)    
+
+    var email
+    if (match) email = match[1]
     
-    return email ? 
-      email[1] : null
+    /**
+    *
+    * XXX Freshdesk API v2 not permit email address that include a plus(+) sign
+    *
+    */
+    if (email) email = email.replace(/\+.+@/, '@')
+
+    return email
   }
   
   function getEmailName(emailString) {
@@ -228,5 +237,5 @@ var GasContact = (function() {
 }())
 
 function testGasContact() {
-  Logger.log(GasContact.getEmailAddress('MD@hguyj.ggradual.xyz Aaron Singleton MD <Aaron.Singleton>'))
+  Logger.log(GasContact.getEmailAddress('zixia+test@zixia.net'))
 }

@@ -42,9 +42,7 @@ var Bizplaner = (function () {
 //      , attachment: attachment
 //    })
     
-    req.errors.push('iboted')
-    
-    return next()
+    return next('iboted')
   }
   
   /**
@@ -84,7 +82,7 @@ var Bizplaner = (function () {
     }
     
     if (isNotBizPlan) { // stop and return
-      return req.errors.push('is not bizplan because ' + reason)
+      return req.pushError('is not bizplan because ' + reason)
     }
     
     next()
@@ -111,7 +109,7 @@ var Bizplaner = (function () {
       var notice = Utilities.formatString('<p>NOTICE: %s attachments too large.</p><br />', Math.floor(attachments.length))
       description = notice + description
       
-      req.errors.push('attachments dropped. original ' + Math.floor(attachments.length) + ' attachments.')
+      req.pushError('attachments dropped. original ' + Math.floor(attachments.length) + ' attachments.')
     }
     
 //    log('summary bizplan from: %s', from)
@@ -124,7 +122,7 @@ var Bizplaner = (function () {
       , attachments: pickedAttachments
     }
     
-    next()
+    return next()
   }
   
   
@@ -134,7 +132,7 @@ var Bizplaner = (function () {
     var message = req.getThread().getMessages()[0]
     
     if (!bizplan) {
-      req.errors.push('no bizplan found, cant analyze for [' + req.getThread().getFirstMessageSubject() + ']')
+      req.pushError('no bizplan found, cant analyze for [' + req.getThread().getFirstMessageSubject() + ']')
       return false
     }
     
@@ -200,15 +198,15 @@ var Bizplaner = (function () {
       if (GasContact.isBeijingMobile(startup.mobile)) {
         isBeijing = true
       } else {
-        req.errors.push('手机号码非北京')
+        req.pushError('手机号码非北京')
       }
       if (/电商|O2O/i.test(startup.name + startup.description + startup.problem)) {
         isOffline = true
-        req.errors.push('电商/O2O方向')
+        req.pushError('电商/O2O方向')
       }
       if (/游戏/.test(startup.name + startup.description + startup.problem)) {
         isGame = true
-        req.errors.push('游戏方向')
+        req.pushError('游戏方向')
       }
     }
 
@@ -223,7 +221,7 @@ var Bizplaner = (function () {
       , offline: isOffline
     }
     
-    next()
+    return next()
   }
 
 

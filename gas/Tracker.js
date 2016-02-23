@@ -17,14 +17,13 @@ var Tracker = (function () {
   
   function logOnStart(req, res, next) {
     req.startTime = new Date()
-    req.errors = []
     log(log.DEBUG, '%s start processing %s'
         , req.getChannelName ? req.getChannelName() : 'unknown'
-        , req.getThread      ? req.getThread().getFirstMessageSubject() : 'unknown'
+        , req.getMessage     ? req.getMessage().getSubject() : 'unknown'
        )
     
-    Mailer.labelAdd_Bug (req, res, function () {})
-    Mailer.labelAdd_Mike(req, res, function () {})
+    Mailer.labelAdd_Bug (req, res, next)
+    Mailer.labelAdd_Mike(req, res, next)
 
     return next()
   }
@@ -34,8 +33,10 @@ var Tracker = (function () {
     
     var noException = true
     
-    if (req.errors.length) {
-      errorMsg = req.errors.map(function (e) { 
+    var errors = req.getErrors()
+    
+    if (errors.length) {
+      errorMsg = errors.map(function (e) { 
         if (e instanceof Error) {
           noException = false
           return e.name + ':' + e.message + ':' + e.stack

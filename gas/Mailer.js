@@ -9,8 +9,8 @@ var Mailer = (function () {
   Mailer.trashBizplan = trashBizplan
   Mailer.forwardBizplan = forwardBizplan
 
-  Mailer.skipFromMyContacts = skipFromMyContacts
-  Mailer.skipFromInvalid    = skipFromInvalid
+  Mailer.skipFromMyContacts    = skipFromMyContacts
+  Mailer.skipFromInvalidSender = skipFromInvalidSender
 
   Mailer.replySubmitGuideIfMailToBpAddress = replySubmitGuideIfMailToBpAddress
 
@@ -69,8 +69,7 @@ var Mailer = (function () {
       messages[i].moveToTrash()
       report += i + ', '
     }
-    req.errors.push(report)
-    next()
+    return next(report)
   }
 
   /**
@@ -86,12 +85,12 @@ var Mailer = (function () {
     var from = firstMessage.getReplyTo() || firstMessage.getFrom()
     
     if (GasContact.isMyContact(from)) {
-      return req.errors.push('skipped my contact:' + from)
+      return req.pushErrors('skipped my contact:' + from)
     } 
     return next()
   }
   
-  function skipFromInvalid(req, res, next) {
+  function skipFromInvalidSender(req, res, next) {
     var message = req.getMessage()
     var from = message.getReplyTo() || message.getFrom()
     
@@ -116,13 +115,16 @@ var Mailer = (function () {
     var to = message.getTo()   
     
     var RE = /bp@pre/i
-    if (RE.test(to)) { // 1. 是发给  bp@pre... 的
-      if (!RE.test(froms)) { // 2. 没有用 bp@pre... 邮件地址作为发件人回复过。（如果  replySubmitGuide 过，就会有这样的发件人。代表不重复回复）
-          replySubmitGuide(message)
-      }
-    }
     
-    return next()
+    // 1. 不是发给  bp@pre... 的
+    if (!RE.test(to))   return next('no guide sent coz not /^bp@pre/i') // 1. 不是发给  bp@pre... 的
+
+    // 2. 用 bp@pre... 邮件地址作为发件人回复过。（如果  replySubmitGuide 过，就会有这样的发件人。这个if判断的目的是：不重复回复）
+    if (RE.test(froms)) return next('submit guide had already sent before') 
+    
+    // 3. 需要回复项目提交说明
+    replySubmitGuide(message)
+    return next('submit guide sent')
   }
   
   /*********************************************
@@ -150,11 +152,11 @@ var Mailer = (function () {
           forwardMessage.moveToTrash()
         }
       } catch (e) {
-        req.errors.push('forwardMessage: ' + e.name + ', ' + e.message)
+        req.pushError('forwardMessage: ' + e.name + ', ' + e.message)
       }
     }
     
-    next()
+    return next()
   }
 
   

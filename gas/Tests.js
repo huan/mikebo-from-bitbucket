@@ -6,8 +6,13 @@ function mikeTestRunner() {
   } // Class GasTap is ready for use now!
 
   var test = new GasTap()
-  
-//  return development()
+ 
+  ///////////////////////////////////////
+  //
+//  return development() + test.finish()
+  return testBizplan() + test.finish()
+  //
+  ///////////////////////////////////////
   
   /////////////////////////////////////
   //
@@ -341,6 +346,36 @@ function mikeTestRunner() {
       
       var isNotBeijing = !GasContact.isBeijingMobile(UNKNOWN_MOBILE)
       t.ok(isNotBeijing, 'unknown mobile')
+    })
+  }
+  
+  function testBizplan() {
+    test('Bizplan', function (t) {
+      var BP_DESCRIPTION = '<h1>description</h1>'
+      var BP_SUBJECT = 'Bizplan1'
+      var BP_FROM_NAME = 'Test'
+      var BP_FROM_EMAIL = 'test@test.com'
+      var BP_FROM = BP_FROM_NAME + ' <' + BP_FROM_EMAIL + '>'
+      
+      var BP_ATTACHMENT_NAME = 'test-data.dat'
+      var BP_ATTACHMENT = Utilities.newBlob('TEST DATA').setName(BP_ATTACHMENT_NAME)
+      
+      var message = {
+          getBody:    function () { return BP_DESCRIPTION }
+        , getSubject: function () { return BP_SUBJECT }
+        , getReplyTo: function () { return BP_FROM }
+        , getFrom:    function () { return BP_FROM }
+        , getAttachments: function () { return [BP_ATTACHMENT] }
+      }
+
+      var bizplan =  new Bizplan(message)
+      
+      t.equal(bizplan.getSubject(), BP_SUBJECT, 'bp subject')
+      t.equal(bizplan.getDescription(), BP_DESCRIPTION, 'bp description')
+      t.equal(bizplan.getFounderName(), BP_FROM_NAME, 'bp founder name')
+      t.equal(bizplan.getFounderEmail(), BP_FROM_EMAIL, 'bp founder email')
+      t.equal(bizplan.getAttachments()[0].getName(), BP_ATTACHMENT_NAME, 'bp attachment name')
+      
     })
   }
 }
