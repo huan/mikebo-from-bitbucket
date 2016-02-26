@@ -28,12 +28,10 @@ var Tracker = (function () {
     return next()
   }
   
-  function logOnEnd(req, res, next) {
+  function logOnEnd(req, res, next) {   
+    var errors   = req.getErrors()
     var errorMsg = ''
-    
     var noException = true
-    
-    var errors = req.getErrors()
     
     if (errors.length) {
       errorMsg = errors.map(function (e) { 
@@ -46,15 +44,16 @@ var Tracker = (function () {
       }).join(',')
     }
     
-    if (noException) Mailer.labelDel_Bug(req, res, function() {})
+    if (noException) Mailer.labelDel_Bug(req, res, next)
 
     log(log.NOTICE, 'C(%s/%ss)[%s] %s'
-        , req.getChannelName ? req.getChannelName() : 'unknown'
+        , req.getChannelName ? req.getChannelName() : 'unknown channel'
         , Math.floor((new Date() - req.startTime)/1000)
         
-        , req.getMessage ? req.getMessage().getSubject() : 'unknown'
+        , req.getMessage ? req.getMessage().getSubject() : 'unknown message subject'
         , errorMsg
        )
+    
     return next()
   }
   

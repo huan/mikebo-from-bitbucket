@@ -85,7 +85,7 @@ var Mailer = (function () {
     var from = firstMessage.getReplyTo() || firstMessage.getFrom()
     
     if (GasContact.isMyContact(from)) {
-      return req.pushErrors('skipped my contact:' + from)
+      return req.pushError('skipped my contact:' + from)
     } 
     return next()
   }
@@ -97,7 +97,7 @@ var Mailer = (function () {
     var email = GasContact.getEmailName(from)
     
     if (!email) {
-      return req.error.push('skipped empty mail from:' + from)
+      return req.pushError('skipped empty mail from:' + from)
     }
     
     return next()

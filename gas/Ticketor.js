@@ -31,12 +31,13 @@ var Ticketor = (function () {
   var Ticket = MyFreshdesk.Ticket
   var Contact = MyFreshdesk.Contact
   var Agent = MyFreshdesk.Agent
-  
-//  var ID_AGENT_MARY = 5008844005
-//  var ID_AGENT_ZIXIA = 5006515033
 
-  var ID_AGENT_ZIXIA = Agent.list({ email: 'zixia@zixia.net' })[0].getId()
-  var ID_AGENT_MARY  = Agent.list({ email: 'mary@aka.cn'     })[0].getId()
+  // hardcoded for cache
+  var ID_AGENT_MARY = 5008844005
+  var ID_AGENT_ZIXIA = 5006515033
+
+//  var ID_AGENT_ZIXIA = Agent.list({ email: 'zixia@zixia.net' })[0].getId()
+//  var ID_AGENT_MARY  = Agent.list({ email: 'mary@aka.cn'     })[0].getId()
 
   var Ticketor = function () {
   }

@@ -58,32 +58,43 @@ var Bizplaner = (function () {
     *
     * 1. Should has no trash message (fresh: had never been touched)
     * 2. Should has no other people reply (fresh: only sender self)
+    * 3. Should has attachment
     *
     */
     var from = messages[0].getFrom()
     
     var isNotBizPlan = false
-    var reason = ''
+    var noAttachment = true
     
     for (var i=0; i<messages.length; i++) {
       
       if (/@google.com/.test(messages[i].getFrom()) ) continue
       
+      // 1. check trashed message
       if (messages[i].isInTrash()) {
         isNotBizPlan = true
-        reason = 'someone have touched this thread.'
+        req.pushError('someone have touched this thread')
       }
       
+      // 2. check if other people had replied
       if (messages[i].getFrom() != from) {
         isNotBizPlan = true
-        reason = 'not all message sent from one sender.'
+        req.pushError('not all message sent from one sender.')
       }
       
+      // 3. check attachment
+      if (messages[i].getAttachments().length) {
+        noAttachment = false
+      }
     }
     
-    if (isNotBizPlan) { // stop and return
-      return req.pushError('is not bizplan because ' + reason)
+    if (noAttachment) {
+      req.pushError('has no attachment')
+      isNotBizPlan = true
     }
+    
+    // stop and return if not bp
+    if (isNotBizPlan) return
     
     next()
   }

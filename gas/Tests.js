@@ -358,7 +358,7 @@ function mikeTestRunner() {
       var BP_FROM = BP_FROM_NAME + ' <' + BP_FROM_EMAIL + '>'
       
       var BP_ATTACHMENT_NAME = 'test-data.dat'
-      var BP_ATTACHMENT = Utilities.newBlob('TEST DATA').setName(BP_ATTACHMENT_NAME)
+      var BP_ATTACHMENT = MockAttachment('dat', 1).setName(BP_ATTACHMENT_NAME)
       
       var message = {
           getBody:    function () { return BP_DESCRIPTION }
@@ -377,5 +377,53 @@ function mikeTestRunner() {
       t.equal(bizplan.getAttachments()[0].getName(), BP_ATTACHMENT_NAME, 'bp attachment name')
       
     })
+    
+    test('Bizplan filterAttachments', function (t) {
+      
+      var ATTACHMENTS = [
+        MockAttachment  ('dat',  1 )
+        , MockAttachment('doc',  1 )
+        , MockAttachment('pdf',  1 )
+        , MockAttachment('png',  1 )
+        , MockAttachment('jpg',  1 )
+        , MockAttachment('ppt',  1 )
+        , MockAttachment('ppt',  10)
+        , MockAttachment('pptx', 1 )
+        , MockAttachment('pdf',  10)
+        , MockAttachment('pdf',  2 )
+        , MockAttachment('jpg',  2 )
+      ]
+      
+      var importantAttachments = Bizplan.pickAttachments(ATTACHMENTS)
+      
+      t.equal(importantAttachments[0].getName(), '1MB.pdf', 'important[0]')
+      t.equal(importantAttachments[1].getName(), '1MB.ppt', 'important[1]')
+
+      var totalSize = importantAttachments
+      .map(function(a) { return a.getSize() })
+      .reduce(function(s1,s2) { return s1 + s2 }, 0)
+//      Logger.log(totalSize)
+      t.ok(totalSize <= 1024*1024*10, 'not greater than 10MB')
+      
+//      ATTACHMENTS.forEach(function (a) {
+//        Logger.log('attachments: ' + a.getName() + ', ' + a.getSize())
+//      })
+//
+//      importantAttachments.forEach(function (a) {
+//        Logger.log(a.getName() + ', ' + a.getSize())
+//      })
+    })
   }
+  
+  /////////////////////////////////
+  
+  function MockAttachment(type, size) {
+    var NAME = size + 'MB.' + type
+    return {
+      getName:   function () { return NAME }
+      , getSize: function () { return size * 1024 * 1024 }
+      , setName: function (name) { NAME = name; return this }
+    }
+  }
+
 }

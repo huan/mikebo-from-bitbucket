@@ -161,18 +161,16 @@ function cleanInbox() {
 
       , Mailer.replySubmitGuideIfMailToBpAddress
       
+      , Mailer.labelAdd_ToBeDeleted
+      , Mailer.moveToArchive
+
+      , Bizplaner.skipInvalidBizPlan
+      , Bizplaner.ibot
       , Bizplaner.summaryBizPlan
       , Parser.mail2Table
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
       , Ticketor.close
-
-      , Mailer.labelAdd_ToBeDeleted
-      , Mailer.moveToArchive
-
-      , Bizplaner.ibot
-      
-//      , Mailer.labelDel_Bug
     )
     
     return bulkChannel.done(Tracker.logOnEnd)
