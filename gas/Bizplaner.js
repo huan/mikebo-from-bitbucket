@@ -6,8 +6,8 @@ var Bizplaner = (function () {
   var Bizplaner = function () {
   }
   
-  Bizplaner.skipInvalidBizPlan = skipInvalidBizPlan
-  Bizplaner.summaryBizPlan = summaryBizPlan
+  Bizplaner.skipInvalidBizplan = skipInvalidBizplan
+  Bizplaner.init = init
   Bizplaner.analyzeDetails = analyzeDetails
 
   Bizplaner.ibot = ibot
@@ -49,8 +49,8 @@ var Bizplaner = (function () {
   *
   *
   */
-  function skipInvalidBizPlan(req, res, next) {
-    log(log.DEBUG, 'entered skipInvalidBizPlan')
+  function skipInvalidBizplan(req, res, next) {
+    log(log.DEBUG, 'entered skipInvalidBizplan')
             
     var messages = req.getThread().getMessages()
     
@@ -100,38 +100,39 @@ var Bizplaner = (function () {
   }
   
   
-  function summaryBizPlan(req, res, next) {
-    log(log.DEBUG, 'entered summaryBizPlan')
-    
+  function init(req, res, next) {
     // the first email from entrepreneur, normaly is BP
     var message = req.getThread().getMessages()[0]
+
     
-    var from = message.getReplyTo() || message.getFrom()
-    var cc = message.getCc()
-    var to = message.getTo()
-    var subject = message.getSubject()
-    var description = message.getBody()
-    var attachments = message.getAttachments()
+//    var from = message.getReplyTo() || message.getFrom()
+//    var cc = message.getCc()
+//    var to = message.getTo()
+//    var subject = message.getSubject()
+//    var description = message.getBody()
+//    var attachments = message.getAttachments()
+//    
+//    // if attachments size more then 8MB, then pick one and keep size less than 8MB
+//    pickedAttachments = pickAttachments_(attachments)
+//    
+//    if (pickedAttachments.length < attachments.length) {
+//      var notice = Utilities.formatString('<p>NOTICE: %s attachments too large.</p><br />', Math.floor(attachments.length))
+//      description = notice + description
+//      
+//      req.pushError('attachments dropped. original ' + Math.floor(attachments.length) + ' attachments.')
+//    }
+//    log('summary bizplan from: %s', from)    
+//    req.bizplan = {
+//      from: from
+//      , to: to // + ',' + cc
+//      , subject: subject
+//      , description: description
+//      , attachments: pickedAttachments
+//    }
     
-    // if attachments size more then 8MB, then pick one and keep size less than 8MB
-    pickedAttachments = pickAttachments_(attachments)
+    var bizplan = new Bizplan(message)
     
-    if (pickedAttachments.length < attachments.length) {
-      var notice = Utilities.formatString('<p>NOTICE: %s attachments too large.</p><br />', Math.floor(attachments.length))
-      description = notice + description
-      
-      req.pushError('attachments dropped. original ' + Math.floor(attachments.length) + ' attachments.')
-    }
-    
-//    log('summary bizplan from: %s', from)
-    
-    req.bizplan = {
-      from: from
-      , to: to // + ',' + cc
-      , subject: subject
-      , description: description
-      , attachments: pickedAttachments
-    }
+    req.bizplan = bizplan
     
     return next()
   }
@@ -176,9 +177,11 @@ var Bizplaner = (function () {
     
     if (zixiaCiphersRe.test
         (
-          bizplan.subject 
-          + bizplan.to 
-          + message.getBody()
+//          bizplan.subject 
+//          + bizplan.to 
+          bizplan.getSubject()
+          + bizplan.getTo()
+          + bizplan.getDescription()
        )
       ) isToZixia = true;
         
@@ -247,35 +250,35 @@ var Bizplaner = (function () {
   
   
   
-  function pickAttachments_(attachments) {
-    
-    var totalSize = attachments
-    .map(function(a) { return a.getSize() })
-    .reduce(function(s1,s2) { return s1 + s2 }, 0)
-    
-    // URL Fetch POST size 10MB / call - https://developers.google.com/apps-script/guides/services/quotas?hl=en
-    var MAX_SIZE = 10 * 1024 * 1024
-    
-    if (totalSize < MAX_SIZE) {
-      return attachments
-    }
-    
-    // get a ppt/pdf is enough
-    var RE = /(\.ppt|\.pptx|\.pdf)/i
-    
-    for (var i = 0; i < attachments.length; i++) {
-      
-      Logger.log(attachments.length)
-      if (RE.test(attachments[i].getName()) 
-          && attachments[i].getSize() < MAX_SIZE) {
-        return [attachments[i]]
-      }
-      
-    }
-    
-    return []
-    
-  }
+//  function pickAttachments_(attachments) {
+//    
+//    var totalSize = attachments
+//    .map(function(a) { return a.getSize() })
+//    .reduce(function(s1,s2) { return s1 + s2 }, 0)
+//    
+//    // URL Fetch POST size 10MB / call - https://developers.google.com/apps-script/guides/services/quotas?hl=en
+//    var MAX_SIZE = 10 * 1024 * 1024
+//    
+//    if (totalSize < MAX_SIZE) {
+//      return attachments
+//    }
+//    
+//    // get a ppt/pdf is enough
+//    var RE = /(\.ppt|\.pptx|\.pdf)/i
+//    
+//    for (var i = 0; i < attachments.length; i++) {
+//      
+//      Logger.log(attachments.length)
+//      if (RE.test(attachments[i].getName()) 
+//          && attachments[i].getSize() < MAX_SIZE) {
+//        return [attachments[i]]
+//      }
+//      
+//    }
+//    
+//    return []
+//    
+//  }
 
 
 }())

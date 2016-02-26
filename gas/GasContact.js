@@ -187,6 +187,8 @@ var GasContact = (function() {
   
   function getEmailName(emailString) {
     
+    if (!emailString) return null
+    
     if (/,/.test(emailString)) {
       return emailString.split(/,/).map(function (e) {
         return getEmailName(e)

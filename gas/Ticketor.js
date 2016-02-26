@@ -78,24 +78,20 @@ var Ticketor = (function () {
 
   
   function tryToPair(req, res, next) {
-    var email = (req.table && req.table.email) || req.getMessage().getReplyTo() || req.getMessage().getFrom()
+//    var email = (req.table && req.table.email) || req.getMessage().getReplyTo() || req.getMessage().getFrom()
+    var email = req.bizplan.getFromEmail()
     
-    email = GasContact.getEmailAddress(email)
+//    email = GasContact.getEmailAddress(email)
         
     if (email) var contacts = Contact.list({ email: email })
     
-    log(log.DEBUG, 'pairing contacts for %s', email)
+//    log(log.DEBUG, 'pairing contacts for %s', email)
 
     if (contacts && contacts.length) {
       var contactId = contacts[0].getId()
-      if (contactId) {
-        var tickets = Ticket.list({ requester_id: contactId });
-      }
-      log(log.DEBUG, 'tickets: %s', tickets)
-      
-      if (tickets && tickets.length) {
-        req.ticket = tickets[0]
-      }
+      if (contactId) var tickets = Ticket.list({ requester_id: contactId })
+      if (tickets && tickets.length) req.ticket = tickets[0]
+//      log(log.DEBUG, 'tickets: %s', tickets)
     }
     
     var ticketId = req.ticket ? req.ticket.getId() : '?'
@@ -109,16 +105,19 @@ var Ticketor = (function () {
   *
   */ 
   function noteOrCreate(req, res, next) {
-    var tableHtml = req.tableHtml
-    var table = req.table
-        
-    var ticket = req.ticket
+//    var tableHtml = req.tableHtml
+//    var table = req.table
     
+    var ticket  = req.ticket
+    var bizplan = req.bizplan
+
+    var description = bizplan.getDescription()
+
     // 1. existing ticket
     if (ticket) { 
       ticket.open()
       ticket.note({
-        body_html: tableHtml
+        body_html: description
         , private: true
       })
       return next('added note to ticket#' + ticket.getId())
@@ -126,12 +125,19 @@ var Ticketor = (function () {
     
     // 2. new ticket    
     ticket = new Ticket({
-      description_html: tableHtml
-      , subject: table.company || table.name || '未填写'
-      , name: table.name
-      , email: table.email
+      description_html: description
+//      , subject: table.company || table.name || '未填写'
+//      , name: table.name
+//      , email: table.email
+      , subject: bizplan.getSubject()
+      , name: bizplan.getFromName()
+      , email: bizplan.getFromEmail()
+      
+      , attachments: bizplan.getAttachments()
     })
+    
     req.ticket = ticket
+    
     return next('created note as ticket#' + ticket.getId())
   }
 
@@ -141,29 +147,33 @@ var Ticketor = (function () {
   *
   */ 
   function replyOrCreate(req, res, next) {
-    var tableHtml = req.tableHtml
-    var table = req.table
+//    var tableHtml = req.tableHtml
+//    var table = req.table
         
-    var ticket = req.ticket
+    var ticket  = req.ticket
+    var bizplan = req.bizplan
     
     // 1. existing ticket
     if (ticket) { 
+      ticket.open()
       ticket.reply({
-        body_html: tableHtml
+        body_html: bizplan.getDescription()
         // already replied, no cc needed anymore:
         // , cc_emails: [ table.email ]
       })
-      ticket.open()
       
       return next('replied ticket#' + ticket.getId())
     }
     
     // 2. create new ticket
     ticket = new Ticket({
-      description_html: tableHtml
-      , subject: table.company
-      , name: table.name
-      , email: table.email
+      description_html: bizplan.getDescription()
+//      , subject: table.company
+//      , name: table.name
+//      , email: table.email
+      , subject: bizplan.getCompany()
+      , name: bizplan.getFromName()
+      , email: bizplan.getFromEmail()
     })
     req.ticket = ticket
     
@@ -174,7 +184,7 @@ var Ticketor = (function () {
     
     var analyze = req.analyze
     var ticket = req.ticket
-    var bizplan = req.bizplan
+//    var bizplan = req.bizplan
 
     var shouldClose = false
     var noteMsg = ''
@@ -239,7 +249,8 @@ var Ticketor = (function () {
     * log all recipients in the email body
     *
     */
-    htmlTo = bizplan.to
+//    htmlTo = bizplan.to
+    htmlTo = bizplan.getTo()
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -247,20 +258,21 @@ var Ticketor = (function () {
     
     htmlTo = '<p>To: ' + htmlTo + '</p><br />'
     
-    bizplan.description = htmlTo + bizplan.description
+//    bizplan.description = htmlTo + bizplan.description
+    var description = htmlTo + bizplan.getDescription()
     
     /**
     *
     * deal with some email with hundreds of CCs... 
     *
     */
-    var recipients = bizplan.to.split(/\s*,\s*/)
-    
-    if (recipients.length > 3) {   
-      // need not CC to them
-      bizplan.to = ''  
-      req.pushError('Too many(' + recipients.length + ') recipients. will not cc anybody.')
-    }
+//    var recipients = bizplan.getTo().split(/\s*,\s*/)
+//    
+//    if (recipients.length > 3) {   
+//      // need not CC to them
+//      bizplan.to = ''  
+//      req.pushError('Too many(' + recipients.length + ') recipients. will not cc anybody.')
+//    }
     
     /**
     *
@@ -268,21 +280,25 @@ var Ticketor = (function () {
     *
     */
     var ticketObj = {
-      description_html: bizplan.description
-      , subject: bizplan.subject
-      , name: GasContact.getEmailName(bizplan.from)
-      , email: GasContact.getEmailAddress(bizplan.from)
+      description_html: description
+      , subject: bizplan.getSubject()
+      , name: GasContact.getEmailName(bizplan.getFrom())
+      , email: GasContact.getEmailAddress(bizplan.getFrom())
+//      , name: bizplan.getFounderName())
+//      , email: bizplan.getFounderEmail())
 //      , cc_emails: bizplan.to
     }
 
-    if (bizplan.attachments && bizplan.attachments instanceof Array && bizplan.attachments.length) {
+    var attachments = bizplan.getAttachments()
+    
+    if (attachments.length) ticketObj.attachments = attachments
+
+//    if (bizplan.attachments && bizplan.attachments instanceof Array && bizplan.attachments.length) {
       
-      ticketObj.attachments = []
-      
-      bizplan.attachments.forEach(function (attachment) {
-        ticketObj.attachments.push(attachment)
-      })  
-    }
+//      bizplan.attachments.forEach(function (attachment) {
+//        ticketObj.attachments.push(attachment)
+//      })  
+//    }
     // XXX
 //log(log.NOTICE, 'before new Ticket')    
 //ticketObj.description_html = 'test'

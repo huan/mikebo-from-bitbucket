@@ -7,18 +7,23 @@ var Bizplan = (function () {
     pickAttachments: pickAttachments
   }
   
-  var Bizplan = function (message) {
+  var Bizplan = function (options) {
     
-    if (typeof this == 'undefined' || Object.keys(this).length) { // called instead of 'newed'
-      throw Error('must use "new" keyword to Bizplan')
-    }
+    if (typeof this === 'undefined' || Object.keys(this).length) throw Error('must use "new" keyword to Bizplan') // called instead of 'newed'
+    if (typeof options !== 'object') throw Error('param must be a object')
     
     var BP = {
       subject: ''
       , description: ''
+      , from_name: ''
+      , from_email: ''
+      , to: ''
+      , cc: ''
       
       , industry: ''
       , location: ''
+      , company: ''
+      , web: ''
       
       , pre_valuation: 0
       , funding: 0
@@ -35,9 +40,8 @@ var Bizplan = (function () {
       
       //////////////////////
       
-      , to: ''        // founder want to deliver this bizplan to who
-      , cc: ''
-      , channel: ''   // where this bizplan from (from marketing view)
+      , destination: '' // founder want to deliver bizplan to whom
+      , source: ''      // where this bizplan comes from (from marketing view)
     }
           
         
@@ -53,6 +57,9 @@ var Bizplan = (function () {
       
       , setLocation: setLocation
       , getLocation: getLocation
+
+      , setCompany: setCompany
+      , getCompany: getCompany
       
       , setPreValuation: setPreValuation
       , getPreValuation: getPreValuation
@@ -64,37 +71,54 @@ var Bizplan = (function () {
       , getFounderName: getFounderName
       , setFounderEmail: setFounderEmail
       , getFounderEmail: getFounderEmail
+      , setFounderMobile: setFounderMobile
+      , getFounderMobile: getFounderMobile
 
       , getAttachments: getAttachments
       , setAttachments: setAttachments
       
+      , setFrom: setFrom
+      , getFrom: getFrom
+      , setFromEmail: setFromEmail
+      , getFromEmail: getFromEmail
+      , setFromName:  setFromName
+      , getFromName:  getFromName
+
       , setTo: setTo
       , getTo: getTo
       
       , setCc: setCc
       , getCc: getCc
 
-      , setChannel: setChannel
-      , getChannel: getChannel
+      , setDestination: setDestination
+      , getDestination: getDestination
+
+      , setWeb: setWeb
+      , getWeb: getWeb
+      
+      , setSource: setSource
+      , getSource: getSource
+
     }
     
-    var from = message.getReplyTo() || message.getFrom()
+    /**
+    * 
+    * init Bizplan from different type of param
+    *
+    */
     
-    var name = GasContact.getEmailName(from)
-    var email = GasContact.getEmailAddress(from)    
-    
-    setSubject    (message.getSubject())
-    setDescription(message.getBody())
-    
-    setAttachments( 
-      pickAttachments( 
-        message.getAttachments()
-      ) 
-    )
-    
-    setFounderName (name)
-    setFounderEmail(email)
-    
+    switch (options.toString()) {
+      case 'GmailMessage':
+        initFromGmailMessage(options)
+        break;
+     
+      case '[object Object]': // optXXX
+        initFromOptions(options)
+        break;
+        
+      default: 
+        throw Error('unknown constructor param for Bizplan')
+    }
     
     /////////////////////////////////////////
     // export static method on Instance
@@ -121,6 +145,12 @@ var Bizplan = (function () {
     function setLocation(s) { BP.location = s }
     function getLocation()  { return BP.location }
       
+    function setCompany(s) { BP.company = s }
+    function getCompany()  { return BP.company }
+
+    function setWeb(s) { BP.web = s }
+    function getWeb()  { return BP.web }
+
     function setPreValuation(n) { BP.pre_valuation = n }
     function getPreValuation()  { return BP.pre_valuation }
       
@@ -131,18 +161,74 @@ var Bizplan = (function () {
     function getFounderName()  { return BP.founder.name }
     function setFounderEmail(s) { BP.founder.email = s }
     function getFounderEmail()  { return BP.founder.email }
+    function setFounderMobile(s) { BP.founder.mobile = s }
+    function getFounderMobile()  { return BP.founder.mobile }
 
     function setAttachments(a) { BP.attachments = a }
     function getAttachments()  { return BP.attachments }
     
+    function setFrom(s) { 
+      BP.from_name  = GasContact.getEmailName(s)
+      BP.from_email = GasContact.getEmailAddress(s)
+    }
+    function getFrom()  { 
+      return (BP.from_name ? BP.from_name + ' ' : '') + '<' + BP.from_email + '>' 
+    }
+    function setFromName(s)  { BP.from_name = s }
+    function getFromName()   { return BP.from_name }
+    function setFromEmail(s) { BP.from_email = s }
+    function getFromEmail()  { return BP.from_email }
+
     function setTo(s) { BP.to = s }
     function getTo()  { return BP.to }
 
     function setCc(s) { BP.cc = s }
     function getCc()  { return BP.cc }
 
-    function setChannel(s) { BP.channel = s }
-    function getChannel()  { return BP.channel }
+    function setDestination(s) { BP.destination = s }
+    function getDestination()  { return BP.destination }
+
+    function setSource(s) { BP.source = s }
+    function getSource()  { return BP.source }
+    
+    ////////////////////////////////////
+    //
+    // Instance private methods
+    //
+    
+    function initFromGmailMessage(message) {
+      var from = message.getReplyTo() || message.getFrom()
+      
+      var name = GasContact.getEmailName(from)
+      var email = GasContact.getEmailAddress(from)    
+      
+      setFrom       (from)
+      setTo         (message.getTo())
+      setCc         (message.getCc())
+      setSubject    (message.getSubject())
+      setDescription(message.getBody())
+      
+      setAttachments( 
+        pickAttachments( 
+          message.getAttachments()
+        ) 
+      )
+      
+      setFounderName (name)
+      setFounderEmail(email)
+    }
+    
+    function initFromOptions(options) {
+      Object.keys(options).forEach(function (k) {
+        var method = k          // setFrom
+        var value  = options[k] // 'zixia@zixia.net'
+        
+        var func = INSTANCE_METHODS[k]
+        if (!func) throw Error('Bizplan.initFromOptions: unknown contructor param(' + k + ') for Bizplan')
+        
+        func[k](value) // setFrom('zixia@zixia.net')
+      })
+    }
     
   }
   
@@ -157,6 +243,8 @@ var Bizplan = (function () {
   //
   
   function pickAttachments(attachments) {
+    if (!attachments) return []
+    
     var totalSize = attachments
     .map(function(a) { return a.getSize() })
     .reduce(function(s1,s2) { return s1 + s2 }, 0)
@@ -250,4 +338,6 @@ var Bizplan = (function () {
 }())
 
 function testBizplan() {
+  Logger.log(typeof GmailApp.getInboxThreads()[0].getMessages()[0])
+  Logger.log(GmailApp.getInboxThreads()[0].getMessages()[0])
 }

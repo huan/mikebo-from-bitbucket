@@ -164,10 +164,10 @@ function cleanInbox() {
       , Mailer.labelAdd_ToBeDeleted
       , Mailer.moveToArchive
 
-      , Bizplaner.skipInvalidBizPlan
+      , Bizplaner.skipInvalidBizplan
       , Bizplaner.ibot
-      , Bizplaner.summaryBizPlan
-      , Parser.mail2Table
+      , Bizplaner.init
+//      , Parser.mail2Table
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
       , Ticketor.close
@@ -239,13 +239,13 @@ function cleanInbox() {
 
       , Mailer.skipFromInvalidSender
       , Mailer.skipFromMyContacts
-      , Bizplaner.skipInvalidBizPlan
+      , Bizplaner.skipInvalidBizplan
       
       , Mailer.labelDel_NotBizPlan
       , Mailer.labelAdd_BizPlan
 //      , Mailer.labelAdd_Bug
       
-      , Bizplaner.summaryBizPlan
+      , Bizplaner.init
       , Ticketor.create
       , Ticketor.process
       , Mailer.trashBizplan
@@ -310,13 +310,13 @@ function cleanInbox() {
 
       , Mailer.skipFromInvalidSender
       , Mailer.skipFromMyContacts
-      , Bizplaner.skipInvalidBizPlan
+      , Bizplaner.skipInvalidBizplan
 
       , Mailer.labelDel_NotBizPlan
       , Mailer.labelAdd_BizPlan
 //      , Mailer.labelAdd_Bug
       
-      , Bizplaner.summaryBizPlan
+      , Bizplaner.init
       , Ticketor.create
       , Ticketor.process
       , Mailer.trashBizplan
@@ -381,13 +381,13 @@ function cleanInbox() {
 
       , Mailer.skipFromInvalidSender
       , Mailer.skipFromMyContacts
-      , Bizplaner.skipInvalidBizPlan
+      , Bizplaner.skipInvalidBizplan
 
       , Mailer.labelDel_NotBizPlan
       , Mailer.labelAdd_BizPlan
 //      , Mailer.labelAdd_Bug
       
-      , Bizplaner.summaryBizPlan
+      , Bizplaner.init
       , Ticketor.create
       , Ticketor.process
       , Mailer.forwardBizplan          
@@ -452,9 +452,10 @@ function cleanInbox() {
 //      , Mailer.labelAdd_Mike
       , Mailer.labelAdd_BizPlan
       
-      , Parser.jsForm2Table
-      , Parser.table2Bizplan
-      
+//      , Parser.jsForm2Table
+//      , Parser.table2Bizplan
+      , Bizplaner.init
+      , Parser.jsform
       
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
@@ -512,8 +513,10 @@ function cleanInbox() {
 //      , Mailer.labelAdd_Mike
 //      , Mailer.labelAdd_Bug
 
-      , Parser.mikeCrm2Table
-      , Parser.table2Apply
+//      , Parser.mikeCrm2Table
+//      , Parser.table2Apply
+      , Bizplaner.init
+      , Parser.mikecrm
       
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
@@ -575,8 +578,10 @@ function cleanInbox() {
 //      , Mailer.labelAdd_Mike
 //      , Mailer.labelAdd_Bug
 
-      , Parser.intviu2Table
-      , Parser.table2Interview
+//      , Parser.intviu2Table
+//      , Parser.table2Interview
+      , Bizplaner.init
+      , Parser.intviu
       
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
