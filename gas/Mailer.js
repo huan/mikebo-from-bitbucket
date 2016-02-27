@@ -226,31 +226,24 @@ var Mailer = (function () {
     
     var ttl = 7
     while (ttl-- > 0) {
-      // not work??? (20160122 failed again)
-//      GmailApp.refreshThread(thread)
-      
-      // must use GmailApp getThread, for force reload
+      /**
+      * 
+      * GmailApp.refreshThread(thread)
+      * not work!??? (20160122 failed again)
+      *
+      * must use GmailApp getThread, to force reload
+      *
+      */
       var threadId = message.getThread().getId()
       var thread = GmailApp.getThreadById(threadId)
       
       log(log.DEBUG, 'forward ttl:%s, message num:%s', ttl, thread.getMessages().length)
       
-      var messages = thread.getMessages().filter(function(m) {
-//        log(log.NOTICE, 'isInTrash:%s, from:%s, to:%s', m.isInTrash(), m.getFrom(), m.getTo())
-//        log(log.NOTICE, '!isInTrash:%s, from:%s, to:%s', !m.isInTrash(), 'zixia@zixia.net' == m.getFrom(), ZIXIABPGROUP == m.getTo())
-        
+      var messages = thread.getMessages()
+      .filter(function(m) {
         var isFwd = !m.isInTrash() && 'zixia@zixia.net' == m.getFrom() && ZIXIABPGROUP == m.getTo()
-//        log(log.NOTICE, 'isFwd: %s', isFwd)
-        
         return isFwd
-//        ( 
-//          !m.isInTrash() 
-//          && 'zixia@zixia.net' == m.getFrom() 
-//        && ZIXIABPGROUP == m.getTo()
-//        )
       })
-      
-//      log(log.NOTICE, 'filtered messages.length: %s', messages.length)
       
       if (messages.length > 0) {
         fwdMessage = messages[0]

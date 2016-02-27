@@ -102,38 +102,10 @@ var Bizplaner = (function () {
   
   function init(req, res, next) {
     // the first email from entrepreneur, normaly is BP
-    var message = req.getThread().getMessages()[0]
-
-    
-//    var from = message.getReplyTo() || message.getFrom()
-//    var cc = message.getCc()
-//    var to = message.getTo()
-//    var subject = message.getSubject()
-//    var description = message.getBody()
-//    var attachments = message.getAttachments()
-//    
-//    // if attachments size more then 8MB, then pick one and keep size less than 8MB
-//    pickedAttachments = pickAttachments_(attachments)
-//    
-//    if (pickedAttachments.length < attachments.length) {
-//      var notice = Utilities.formatString('<p>NOTICE: %s attachments too large.</p><br />', Math.floor(attachments.length))
-//      description = notice + description
-//      
-//      req.pushError('attachments dropped. original ' + Math.floor(attachments.length) + ' attachments.')
-//    }
-//    log('summary bizplan from: %s', from)    
-//    req.bizplan = {
-//      from: from
-//      , to: to // + ',' + cc
-//      , subject: subject
-//      , description: description
-//      , attachments: pickedAttachments
-//    }
-    
+    var message = req.getMessage()
     var bizplan = new Bizplan(message)
-    
-    req.bizplan = bizplan
-    
+
+    req.bizplan = bizplan   
     return next()
   }
   
@@ -177,11 +149,9 @@ var Bizplaner = (function () {
     
     if (zixiaCiphersRe.test
         (
-//          bizplan.subject 
-//          + bizplan.to 
           bizplan.getSubject()
           + bizplan.getTo()
-          + bizplan.getDescription()
+          + bizplan.getBody()
        )
       ) isToZixia = true;
         
@@ -203,10 +173,6 @@ var Bizplaner = (function () {
     var isOffline = false
     var isGame = false
 
-//    log('startup: ' + startup)
-//
-//    log('isBeijing: ' + isBeijing)    
-  
     if (startup) {
       if (/北京|beijing|中关村|海淀/i.test(startup.address + startup.company)) isBeijing = true
       if (GasContact.isBeijingMobile(startup.mobile)) {
@@ -248,37 +214,6 @@ var Bizplaner = (function () {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
   
-  
-  
-//  function pickAttachments_(attachments) {
-//    
-//    var totalSize = attachments
-//    .map(function(a) { return a.getSize() })
-//    .reduce(function(s1,s2) { return s1 + s2 }, 0)
-//    
-//    // URL Fetch POST size 10MB / call - https://developers.google.com/apps-script/guides/services/quotas?hl=en
-//    var MAX_SIZE = 10 * 1024 * 1024
-//    
-//    if (totalSize < MAX_SIZE) {
-//      return attachments
-//    }
-//    
-//    // get a ppt/pdf is enough
-//    var RE = /(\.ppt|\.pptx|\.pdf)/i
-//    
-//    for (var i = 0; i < attachments.length; i++) {
-//      
-//      Logger.log(attachments.length)
-//      if (RE.test(attachments[i].getName()) 
-//          && attachments[i].getSize() < MAX_SIZE) {
-//        return [attachments[i]]
-//      }
-//      
-//    }
-//    
-//    return []
-//    
-//  }
 
 
 }())

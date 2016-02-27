@@ -165,9 +165,8 @@ function cleanInbox() {
       , Mailer.moveToArchive
 
       , Bizplaner.skipInvalidBizplan
-      , Bizplaner.ibot
       , Bizplaner.init
-//      , Parser.mail2Table
+      , Bizplaner.ibot
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
       , Ticketor.close
@@ -234,7 +233,6 @@ function cleanInbox() {
     
     bpWithCipherChannel.use(
       Tracker.logOnStart
-//      , Mailer.labelAdd_Mike
       , Mailer.labelAdd_NotBizPlan
 
       , Mailer.skipFromInvalidSender
@@ -243,7 +241,6 @@ function cleanInbox() {
       
       , Mailer.labelDel_NotBizPlan
       , Mailer.labelAdd_BizPlan
-//      , Mailer.labelAdd_Bug
       
       , Bizplaner.init
       , Ticketor.create
@@ -251,8 +248,6 @@ function cleanInbox() {
       , Mailer.trashBizplan
 
       , Bizplaner.ibot
-
-//      , Mailer.labelDel_Bug
     )
 
     bpWithCipherChannel.done(Tracker.logOnEnd)
@@ -305,7 +300,6 @@ function cleanInbox() {
     
     bpZixiaChannel.use(
       Tracker.logOnStart
-//      , Mailer.labelAdd_Mike
       , Mailer.labelAdd_NotBizPlan
 
       , Mailer.skipFromInvalidSender
@@ -314,7 +308,6 @@ function cleanInbox() {
 
       , Mailer.labelDel_NotBizPlan
       , Mailer.labelAdd_BizPlan
-//      , Mailer.labelAdd_Bug
       
       , Bizplaner.init
       , Ticketor.create
@@ -323,8 +316,6 @@ function cleanInbox() {
       
       , Bizplaner.ibot
       , Ticketor.noteIbot
-
-//      , Mailer.labelDel_Bug
     )
 
     bpZixiaChannel.done(Tracker.logOnEnd)
@@ -376,7 +367,6 @@ function cleanInbox() {
     
     zixiaChannel.use(
       Tracker.logOnStart
-//      , Mailer.labelAdd_Mike
       , Mailer.labelAdd_NotBizPlan
 
       , Mailer.skipFromInvalidSender
@@ -385,15 +375,12 @@ function cleanInbox() {
 
       , Mailer.labelDel_NotBizPlan
       , Mailer.labelAdd_BizPlan
-//      , Mailer.labelAdd_Bug
       
       , Bizplaner.init
       , Ticketor.create
       , Ticketor.process
       , Mailer.forwardBizplan          
       , Mailer.trashBizplan
-      
-//      , Mailer.labelDel_Bug
     )
     
     zixiaChannel.done(Tracker.logOnEnd)
@@ -447,27 +434,20 @@ function cleanInbox() {
     
     formChannel.use(
       Tracker.logOnStart
-//      , Mailer.labelAdd_Bug
 
-//      , Mailer.labelAdd_Mike
       , Mailer.labelAdd_BizPlan
       
-//      , Parser.jsForm2Table
-//      , Parser.table2Bizplan
       , Bizplaner.init
       , Parser.jsform
       
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
-//      , Ticketor.create
 
       , Bizplaner.analyzeDetails
       , Ticketor.process
 
       , Mailer.labelAdd_ToBeDeleted
       , Mailer.moveToArchive
-
-//      , Mailer.labelDel_Bug
     )
     
     formChannel.done(Tracker.logOnEnd)
@@ -510,22 +490,16 @@ function cleanInbox() {
     applyChannel.use(
       Tracker.logOnStart
       , Mailer.labelAdd_BizPlan
-//      , Mailer.labelAdd_Mike
-//      , Mailer.labelAdd_Bug
 
-//      , Parser.mikeCrm2Table
-//      , Parser.table2Apply
       , Bizplaner.init
       , Parser.mikecrm
       
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
-//      , Ticketor.replyOrCreate
       , Ticketor.mediumPriority
 
       , Mailer.markRead
       , Mailer.moveToArchive
-//      , Mailer.labelDel_Bug
     )
     
     applyChannel.done(Tracker.logOnEnd)
@@ -560,9 +534,11 @@ function cleanInbox() {
       , dayspan: DAYSPAN
       , query: 'from:@intviu.cn to:(zixia OR bp)'
       
-      // dont touch thread label.
-      // instead, we trash message after process. 
-      // because maybe there'll be new message in this thread.
+      /**
+      * Don't exclude thread out of channel after process.
+      * instead, we trash each message after process. 
+      * because maybe there'll be new message arrived in this thread when we are processing.
+      */
       , doneLabel: null 
       , conversation: false
       
@@ -575,21 +551,15 @@ function cleanInbox() {
     intviuChannel.use(
       Tracker.logOnStart
       , Mailer.labelAdd_BizPlan
-//      , Mailer.labelAdd_Mike
-//      , Mailer.labelAdd_Bug
 
-//      , Parser.intviu2Table
-//      , Parser.table2Interview
       , Bizplaner.init
       , Parser.intviu
       
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
       , Ticketor.highPriority
-//      , Ticketor.replyOrCreate
 
       , Mailer.trashMessage
-//      , Mailer.labelDel_Bug
     )
     
     intviuChannel.done(Tracker.logOnEnd)

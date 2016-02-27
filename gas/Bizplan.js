@@ -7,6 +7,11 @@ var Bizplan = (function () {
     pickAttachments: pickAttachments
   }
   
+  /**
+  *
+  * Class Bizplan Constructor
+  *
+  */
   var Bizplan = function (options) {
     
     if (typeof this === 'undefined' || Object.keys(this).length) throw Error('must use "new" keyword to Bizplan') // called instead of 'newed'
@@ -14,7 +19,7 @@ var Bizplan = (function () {
     
     var BP = {
       subject: ''
-      , description: ''
+      , body: ''
       , from_name: ''
       , from_email: ''
       , to: ''
@@ -49,8 +54,8 @@ var Bizplan = (function () {
         setSubject: setSubject
       , getSubject: getSubject
       
-      , setDescription: setDescription
-      , getDescription: getDescription
+      , setBody: setBody
+      , getBody: getBody
       
       , setIndustry: setIndustry
       , getIndustry: getIndustry
@@ -106,7 +111,6 @@ var Bizplan = (function () {
     * init Bizplan from different type of param
     *
     */
-    
     switch (options.toString()) {
       case 'GmailMessage':
         initFromGmailMessage(options)
@@ -136,8 +140,8 @@ var Bizplan = (function () {
     function setSubject(s) { BP.subject = s }
     function getSubject()  { return BP.subject }
       
-    function setDescription(s) { BP.description = s }
-    function getDescription()  { return BP.description }
+    function setBody(s) { BP.Body = s }
+    function getBody()  { return BP.Body }
       
     function setIndustry(s) { BP.industry = s }
     function getIndustry()  { return BP.industry }
@@ -206,7 +210,7 @@ var Bizplan = (function () {
       setTo         (message.getTo())
       setCc         (message.getCc())
       setSubject    (message.getSubject())
-      setDescription(message.getBody())
+      setBody(message.getBody())
       
       setAttachments( 
         pickAttachments( 
@@ -232,14 +236,25 @@ var Bizplan = (function () {
     
   }
   
+  //
+  // Instance Constructor END
+  //
+  ////////////////////////////////////////////////////////////////////////////////
+  
+  
+  
   // export static methods on Class
   Object.keys(STATIC_METHODS).forEach(function (k) { Bizplan[k] = STATIC_METHODS[k] })
 
+  
+  
   return Bizplan
+  
+  
   
   ////////////////////////////////////////////////////////////////////////////////
   //
-  // Static methods
+  // Class Static methods
   //
   
   function pickAttachments(attachments) {
@@ -268,9 +283,6 @@ var Bizplan = (function () {
     var importantAttachments = []   
     var RE = /(\.ppt|\.pptx|\.pdf)/i // get a ppt/pdf is enough
     
-//    Logger.log('attachment num:' + attachments.length)
-//    Logger.log('importantAttachment num:' + importantAttachments.length)
-
     /**
     *
     * How to deleting array items in javascript with forEach() and splice()
@@ -285,8 +297,6 @@ var Bizplan = (function () {
       .map   (function (a) { return a.getSize() })
       .reduce(function (s1, s2) { return s1 + s2 }, 0)
       
-//      Logger.log('checking ' + att.getName())
-      
       // 2.1 not bp format
       if (!RE.test(att.getName())) return
       // 2.2 exceed max size
@@ -295,12 +305,7 @@ var Bizplan = (function () {
       // 2.3 this attachment is "important", and move it to import list.
       importantAttachments.push(att)
       skipMarks[idx] = true
-      
-//      Logger.log('picked ' + att.getName())
     })
-    
-//    Logger.log('attachment num:' + attachments.length)
-//    Logger.log('importantAttachment num:' + importantAttachments.length)
     
     /**
     *
@@ -314,18 +319,12 @@ var Bizplan = (function () {
       .map   (function (a) { return a.getSize() })
       .reduce(function (s1, s2) { return s1 + s2 }, 0)
       
-//      Logger.log('checking ' + att.getName())
-
       if ((importantAttachmentsSize + att.getSize()) > MAX_SIZE) return
       
       // 3.1 there is some room for this attachment
       importantAttachments.push(att)
       
-//      Logger.log('picked ' + att.getName())
     })
-
-//    Logger.log('attachment num:' + attachments.length)
-//    Logger.log('importantAttachment num:' + importantAttachments.length)
     
     /**
     *

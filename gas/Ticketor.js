@@ -78,20 +78,14 @@ var Ticketor = (function () {
 
   
   function tryToPair(req, res, next) {
-//    var email = (req.table && req.table.email) || req.getMessage().getReplyTo() || req.getMessage().getFrom()
     var email = req.bizplan.getFromEmail()
     
-//    email = GasContact.getEmailAddress(email)
-        
     if (email) var contacts = Contact.list({ email: email })
     
-//    log(log.DEBUG, 'pairing contacts for %s', email)
-
     if (contacts && contacts.length) {
       var contactId = contacts[0].getId()
       if (contactId) var tickets = Ticket.list({ requester_id: contactId })
       if (tickets && tickets.length) req.ticket = tickets[0]
-//      log(log.DEBUG, 'tickets: %s', tickets)
     }
     
     var ticketId = req.ticket ? req.ticket.getId() : '?'
@@ -105,13 +99,10 @@ var Ticketor = (function () {
   *
   */ 
   function noteOrCreate(req, res, next) {
-//    var tableHtml = req.tableHtml
-//    var table = req.table
-    
     var ticket  = req.ticket
     var bizplan = req.bizplan
 
-    var description = bizplan.getDescription()
+    var description = bizplan.getBody()
 
     // 1. existing ticket
     if (ticket) { 
@@ -126,10 +117,7 @@ var Ticketor = (function () {
     // 2. new ticket    
     ticket = new Ticket({
       description_html: description
-//      , subject: table.company || table.name || '未填写'
-//      , name: table.name
-//      , email: table.email
-      , subject: bizplan.getSubject()
+      , subject: bizplan.getSubject() || '未填写'
       , name: bizplan.getFromName()
       , email: bizplan.getFromEmail()
       
@@ -147,9 +135,6 @@ var Ticketor = (function () {
   *
   */ 
   function replyOrCreate(req, res, next) {
-//    var tableHtml = req.tableHtml
-//    var table = req.table
-        
     var ticket  = req.ticket
     var bizplan = req.bizplan
     
@@ -157,7 +142,7 @@ var Ticketor = (function () {
     if (ticket) { 
       ticket.open()
       ticket.reply({
-        body_html: bizplan.getDescription()
+        body_html: bizplan.getBody()
         // already replied, no cc needed anymore:
         // , cc_emails: [ table.email ]
       })
@@ -167,10 +152,7 @@ var Ticketor = (function () {
     
     // 2. create new ticket
     ticket = new Ticket({
-      description_html: bizplan.getDescription()
-//      , subject: table.company
-//      , name: table.name
-//      , email: table.email
+      description_html: bizplan.getBody()
       , subject: bizplan.getCompany()
       , name: bizplan.getFromName()
       , email: bizplan.getFromEmail()
@@ -184,7 +166,6 @@ var Ticketor = (function () {
     
     var analyze = req.analyze
     var ticket = req.ticket
-//    var bizplan = req.bizplan
 
     var shouldClose = false
     var noteMsg = ''
@@ -240,8 +221,6 @@ var Ticketor = (function () {
   *
   */
   function create(req, res, next) {
-//    log(log.DEBUG, 'entered Ticketor.create')
-
     var bizplan = req.bizplan
     
     /**
@@ -249,7 +228,6 @@ var Ticketor = (function () {
     * log all recipients in the email body
     *
     */
-//    htmlTo = bizplan.to
     htmlTo = bizplan.getTo()
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -258,21 +236,7 @@ var Ticketor = (function () {
     
     htmlTo = '<p>To: ' + htmlTo + '</p><br />'
     
-//    bizplan.description = htmlTo + bizplan.description
-    var description = htmlTo + bizplan.getDescription()
-    
-    /**
-    *
-    * deal with some email with hundreds of CCs... 
-    *
-    */
-//    var recipients = bizplan.getTo().split(/\s*,\s*/)
-//    
-//    if (recipients.length > 3) {   
-//      // need not CC to them
-//      bizplan.to = ''  
-//      req.pushError('Too many(' + recipients.length + ') recipients. will not cc anybody.')
-//    }
+    var description = htmlTo + bizplan.getBody()
     
     /**
     *
@@ -282,31 +246,15 @@ var Ticketor = (function () {
     var ticketObj = {
       description_html: description
       , subject: bizplan.getSubject()
-      , name: GasContact.getEmailName(bizplan.getFrom())
-      , email: GasContact.getEmailAddress(bizplan.getFrom())
-//      , name: bizplan.getFounderName())
-//      , email: bizplan.getFounderEmail())
-//      , cc_emails: bizplan.to
+      , name:    bizplan.getFromName()
+      , email:   bizplan.getFromEmail()
     }
 
     var attachments = bizplan.getAttachments()
     
     if (attachments.length) ticketObj.attachments = attachments
 
-//    if (bizplan.attachments && bizplan.attachments instanceof Array && bizplan.attachments.length) {
-      
-//      bizplan.attachments.forEach(function (attachment) {
-//        ticketObj.attachments.push(attachment)
-//      })  
-//    }
-    // XXX
-//log(log.NOTICE, 'before new Ticket')    
-//ticketObj.description_html = 'test'
-//ticketObj.attachments = [ Utilities.newBlob('DATA').setName('test.dat') ]
-//log(ticketObj.attachments[0].getName())
-//log(JSON.stringify(ticketObj))
     req.ticket = new Ticket(ticketObj)
-//log(log.NOTICE, 'after new Ticket')    
     
     return next('created ticket #' + req.ticket.getId())
   }
