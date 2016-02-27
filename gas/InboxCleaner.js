@@ -57,6 +57,8 @@ function cleanInbox() {
   doApplyChannel()        // 5. PreAngel申请表(MikeCRM)
   doIntviuChannel()       // 6. 橙云面试视频(IntViu)
   
+  doPlugAndPlayChannel()  // 7. Plug and Play BP
+  
   // End Cleaning
   //
   /////////////////////////////////////////////////////////////////////
@@ -567,4 +569,46 @@ function cleanInbox() {
   }   
 
  
+  function doPlugAndPlayChannel() {
+    var pnpChannel = new GmailChannel({
+      name: 'PnP'
+      , labels: [ 'inbox', '-trash' ]
+      , dayspan: DAYSPAN
+      , query: 'to:bp@pnp.vc'
+      
+      , doneLabel: 'OutOfPnPChannel'
+      
+      , limit: LIMIT
+      , res: {}
+    })
+    
+    pnpChannel.use(
+      Tracker.logOnStart
+      , Mailer.labelAdd_BizPlan
+      
+      , Bizplaner.init
+      
+      , Ticketor.tryToPair
+      , Ticketor.noteOrCreate
+      , Ticketor.assignPnp
+      , Ticketor.assignChen
+      
+      , Mailer.labelAdd_ToBeDeleted
+      , Mailer.moveToArchive
+    )
+    
+    pnpChannel.done(Tracker.logOnEnd)
+    
+  }
+}
+
+function testInboxCleaner() {
+  //    pnpChannel = new GmailChannel({
+  //      query: '知食分子BP'
+  //      , labels: []
+  //      , res: {}
+  //    })
+  
+  
+
 }

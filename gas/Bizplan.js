@@ -25,6 +25,9 @@ var Bizplan = (function () {
       , to: ''
       , cc: ''
       
+      , problem: ''
+      , solution: ''
+      
       , industry: ''
       , location: ''
       , company: ''
@@ -56,6 +59,12 @@ var Bizplan = (function () {
       
       , setBody: setBody
       , getBody: getBody
+      
+      , setProblem: setProblem
+      , getProblem: getProblem
+      
+      , setSolution: setSolution
+      , getSolution: getSolution
       
       , setIndustry: setIndustry
       , getIndustry: getIndustry
@@ -142,6 +151,12 @@ var Bizplan = (function () {
       
     function setBody(s) { BP.Body = s }
     function getBody()  { return BP.Body }
+      
+    function setProblem(s) { BP.problem = s }
+    function getProblem()  { return BP.problem }
+      
+    function setSolution(s) { BP.solution = s }
+    function getSolution()  { return BP.solution }
       
     function setIndustry(s) { BP.industry = s }
     function getIndustry()  { return BP.industry }

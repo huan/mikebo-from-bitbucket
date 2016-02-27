@@ -177,6 +177,10 @@ var Parser = (function () {
     bizplan.setWeb(startup.web)
     bizplan.setLocation(startup.address) 
     
+    bizplan.setDestination(startup.deliverTo)
+    
+    bizplan.setProblem(startup.problem)
+    bizplan.setSolution(startup.description)
     
     if (!bizplan.getFromEmail()) {
       return false

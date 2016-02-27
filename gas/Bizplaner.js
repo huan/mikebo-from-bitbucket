@@ -18,31 +18,17 @@ var Bizplaner = (function () {
   ///////////////////////////////////////////////////////////
   
   function ibot(req, res, next) {
-    var message = req.getMessage()
-    var attachments = message.getAttachments()
-    
-    var attachment
-    var MAX_SIZE = 8 * 1024 * 1024 - message.getBody().length
-    
-    log(log.DEBUG, 'MAX_SIZE: %s', MAX_SIZE)
-    
-    for (var i in attachments) {
-      if (attachments[i].getSize() > MAX_SIZE) {
-        continue
-      }
-      attachment = attachments[i]
-      break
-    }
+    var bizplan = req.bizplan
     
 //    req.ibot = IBot.query({
-//      from: message.getReplyTo() || message.getFrom()
-//      , to: message.getTo()
-//      , subject: message.getSubject()
-//      , body: message.getBody()
-//      , attachment: attachment
+//      from: bizplan.getFromEmail()
+//      , to: bizplan.getTo()
+//      , subject: bizplan.getSubject()
+//      , body: bizplan.getBody()
+//      , attachment: bizplan.getAttachments()
 //    })
     
-    return next('iboted')
+    return next('fake iboted')
   }
   
   /**
@@ -112,18 +98,77 @@ var Bizplaner = (function () {
   
   function analyzeDetails(req, res, next) {
     var bizplan = req.bizplan
-    var startup = req.startup
-    var message = req.getThread().getMessages()[0]
     
-    if (!bizplan) {
-      req.pushError('no bizplan found, cant analyze for [' + req.getThread().getFirstMessageSubject() + ']')
-      return false
+    if (!bizplan) throw Error('no bizplan found, cant analyze')
+
+    req.analyze = {
+      zixia: isToZixia(bizplan)
+      , beijing: isBeijing(bizplan)
+      , game: isGame(bizplan)
+      , offline: isOffline(bizplan)
     }
     
-    /////////////////////////////////////////////////
-    //
-    // 1. isToZixia
+    return next()
+  }
+
+
+  
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+  //
+  // The Following are Helper functions, not Middle Ware.
+  //
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+  
+
+  function isBeijing(bizplan) {
+    var testStr = bizplan.getLocation() + ',' + bizplan.getCompany()
     
+    var isBeijing = false
+    if (/北京|beijing|中关村|海淀/i.test(testStr)) isBeijing = true
+    
+    var mobile = bizplan.getFounderMobile()
+    if (GasContact.isBeijingMobile(mobile)) {
+      isBeijing = true
+    }
+    
+    return isBeijing
+  }
+
+  function isGame(bizplan) {
+    var str = [
+      bizplan.getSubject()
+      , bizplan.getBody()
+      , bizplan.getProblem()
+      , bizplan.getSolution()
+    ].join(',')
+      
+    var isGame = false
+    if (/游戏/.test(str)) {
+      isGame = true
+    }
+    
+    return isGame
+  }
+  
+  function isOffline(bizplan) {
+    var str = [
+      bizplan.getSubject()
+      , bizplan.getBody()
+      , bizplan.getProblem()
+      , bizplan.getSolution()
+    ].join(',')
+    
+    var isOffline = false
+    if (/电商|O2O/i.test(str)) {
+      isOffline = true
+    }
+    
+    return isOffline
+  }
+
+  function isToZixia(bizplan) {    
     var zixiaCiphers = [
       'abu'
       , '阿布'
@@ -145,75 +190,24 @@ var Bizplaner = (function () {
     ]
     var zixiaCiphersRe = new RegExp(zixiaCiphers.join('|'), 'i')
     
+    var testStr = [
+      bizplan.getSubject()
+      , bizplan.getTo()
+      , bizplan.getBody()
+    ].join(',')
+    
     var isToZixia = false
     
-    if (zixiaCiphersRe.test
-        (
-          bizplan.getSubject()
-          + bizplan.getTo()
-          + bizplan.getBody()
-       )
-      ) isToZixia = true;
-        
-    if (startup && startup.deliverTo) {
-      if (/无所谓|所有人/.test(startup.deliverTo)) isToZixia = true
-      else if (!/李卓桓/.test(startup.deliverTo)) isToZixia = false
-    }
-        
-    // isToZixia
-    //
-    /////////////////////////////////////////
+    if (zixiaCiphersRe.test(testStr)) isToZixia = true
     
+    var destination = bizplan.getDestination()
     
-    /////////////////////////////////////////////////
-    //
-    // 2. positioning
-    
-    var isBeijing = false
-    var isOffline = false
-    var isGame = false
-
-    if (startup) {
-      if (/北京|beijing|中关村|海淀/i.test(startup.address + startup.company)) isBeijing = true
-      if (GasContact.isBeijingMobile(startup.mobile)) {
-        isBeijing = true
-      } else {
-        req.pushError('手机号码非北京')
-      }
-      if (/电商|O2O/i.test(startup.name + startup.description + startup.problem)) {
-        isOffline = true
-        req.pushError('电商/O2O方向')
-      }
-      if (/游戏/.test(startup.name + startup.description + startup.problem)) {
-        isGame = true
-        req.pushError('游戏方向')
-      }
-    }
-
-    // positioning
-    //
-    /////////////////////////////////////////
-    
-    req.analyze = {
-      zixia: isToZixia
-      , beijing: isBeijing
-      , game: isGame
-      , offline: isOffline
+    if (destination) {
+      if (/无所谓|所有人/.test(destination)) isToZixia = true
+      else if (!/李卓桓/.test(destination)) isToZixia = false
     }
     
-    return next()
+    return isToZixia
   }
-
-
   
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-  //
-  // The Following are Helper functions, not Middle Ware.
-  //
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-  
-
-
 }())
