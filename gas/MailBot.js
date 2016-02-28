@@ -135,29 +135,10 @@ function cleanInbox() {
       , res: {}
     })
     
-    // DEBUG
-//    bulkChannel = new GmailChannel ({
-//      name: 'bulkChannel'
-//      , keywords: []
-//      , labels: [
-//        'inbox'
-//        , '-' + 'ToBeDeleted'
-//        , '-' + 'trash'
-//      ]
-//      , query: '企业如何获得政府财税支持'
-//      , doneLabel: 'OutOfBulkChannel'
-//      , limit: 1
-//      , res: {
-//        Ticket: MyFreshdesk.Ticket
-//      }
-//    })
-    
-    
-    log(log.DEBUG, bulkChannel.getName() + ' QUERY_STRING: [' + bulkChannel.getQueryString() + ']')
-
     bulkChannel.use(
-      Tracker.logOnStart
-      
+      Tracker.logOnStart     
+      , Bizplaner.init
+
       , Mailer.skipFromInvalidSender
       , Mailer.skipFromMyContacts
 
@@ -167,7 +148,8 @@ function cleanInbox() {
       , Mailer.moveToArchive
 
       , Bizplaner.skipInvalidBizplan
-      , Bizplaner.init
+      , Mailer.labelAdd_BizPlan
+
       , Bizplaner.ibot
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
@@ -215,27 +197,12 @@ function cleanInbox() {
       , limit: LIMIT
       , res: {}
     })
-    
-//    bpWithCipherChannel = new GmailChannel({
-//      name: 'bpWithCipher'
-//      , query: '新型资产管理公司商业计划简要'
-//      , keywords: []
-//      , labels: [
-//        , '-' + 'trash'
-//      ]
-//      
-//      , doneLabel: null
-//      , limit: LIMIT
-//      , res: {
-//        Ticket: MyFreshdesk.Ticket
-//      }
-//    })
-    
-    log(log.DEBUG, bpWithCipherChannel.getName() + ' QUERY_STRING: [' + bpWithCipherChannel.getQueryString() + ']')
-    
+        
     bpWithCipherChannel.use(
       Tracker.logOnStart
       , Mailer.labelAdd_NotBizPlan
+
+      , Bizplaner.init
 
       , Mailer.skipFromInvalidSender
       , Mailer.skipFromMyContacts
@@ -244,7 +211,7 @@ function cleanInbox() {
       , Mailer.labelDel_NotBizPlan
       , Mailer.labelAdd_BizPlan
       
-      , Bizplaner.init
+
       , Ticketor.create
       , Ticketor.process
       , Mailer.trashBizplan
@@ -289,20 +256,12 @@ function cleanInbox() {
       , limit: LIMIT
       , res: {}
     })
-    
-//    bpChannel = new GmailChannel({
-//      query: '天使帮推荐项目- 众趣3D'
-//      , labels: []
-//      , res: {
-//        Ticket: MyFreshdesk.Ticket
-//      }
-//    })
-    
-    log(log.DEBUG, bpZixiaChannel.getName() + ' QUERY_STRING: ' + bpZixiaChannel.getQueryString())
-    
+        
     bpZixiaChannel.use(
       Tracker.logOnStart
       , Mailer.labelAdd_NotBizPlan
+
+      , Bizplaner.init
 
       , Mailer.skipFromInvalidSender
       , Mailer.skipFromMyContacts
@@ -311,7 +270,7 @@ function cleanInbox() {
       , Mailer.labelDel_NotBizPlan
       , Mailer.labelAdd_BizPlan
       
-      , Bizplaner.init
+
       , Ticketor.create
       , Ticketor.process
       , Mailer.trashBizplan
@@ -357,19 +316,11 @@ function cleanInbox() {
       , res: {}
     })
     
-//    zixiaChannel = new GmailChannel({
-//      name: 'zixiaChannel'
-//      , query: '为我的创业项目“去耍”寻求筹款'
-//      , labels: []
-//      , doneLabel: null
-//      , res: {}
-//    })
-
-    log(log.DEBUG, zixiaChannel.getName() + ' QUERY_STRING: [' + zixiaChannel.getQueryString() + ']')
-    
     zixiaChannel.use(
       Tracker.logOnStart
       , Mailer.labelAdd_NotBizPlan
+
+      , Bizplaner.init
 
       , Mailer.skipFromInvalidSender
       , Mailer.skipFromMyContacts
@@ -378,7 +329,6 @@ function cleanInbox() {
       , Mailer.labelDel_NotBizPlan
       , Mailer.labelAdd_BizPlan
       
-      , Bizplaner.init
       , Ticketor.create
       , Ticketor.process
       , Mailer.forwardBizplan          
@@ -423,17 +373,7 @@ function cleanInbox() {
       , limit: LIMIT
       , res: {}
     })
-    
-    //  formChannel = new GmailChannel({
-    //    query: '融资申请 133 天天车城二手车 to:bp'
-    //    , labels: []
-    //    , res: {
-    //      Ticket: MyFreshdesk.Ticket
-    //    }
-    //  })
-
-    log(log.DEBUG, formChannel.getName() + ' QUERY_STRING: [' + formChannel.getQueryString() + ']')
-    
+     
     formChannel.use(
       Tracker.logOnStart
 
@@ -443,7 +383,7 @@ function cleanInbox() {
       , Parser.jsform
       
       , Ticketor.tryToPair
-      , Ticketor.noteOrCreate
+      , Ticketor.replyOrCreate
 
       , Bizplaner.analyzeDetails
       , Ticketor.process
@@ -497,7 +437,7 @@ function cleanInbox() {
       , Parser.mikecrm
       
       , Ticketor.tryToPair
-      , Ticketor.noteOrCreate
+      , Ticketor.replyOrCreate
       , Ticketor.mediumPriority
 
       , Mailer.markRead
@@ -547,9 +487,7 @@ function cleanInbox() {
       , limit: LIMIT
       , res: {}
     })
-    
-    log(log.DEBUG, intviuChannel.getName() + ' QUERY_STRING: [' + intviuChannel.getQueryString() + ']')
-    
+        
     intviuChannel.use(
       Tracker.logOnStart
       , Mailer.labelAdd_BizPlan
@@ -558,7 +496,7 @@ function cleanInbox() {
       , Parser.intviu
       
       , Ticketor.tryToPair
-      , Ticketor.noteOrCreate
+      , Ticketor.replyOrCreate
       , Ticketor.highPriority
 
       , Mailer.trashMessage
@@ -603,12 +541,9 @@ function cleanInbox() {
 }
 
 function testInboxCleaner() {
-  //    pnpChannel = new GmailChannel({
-  //      query: '知食分子BP'
-  //      , labels: []
-  //      , res: {}
-  //    })
-  
-  
-
+//  theChannel = new GmailChannel({
+//    query: '知食分子BP'
+//    , labels: []
+//    , res: {}
+//  })
 }

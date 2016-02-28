@@ -121,7 +121,7 @@ var Ticketor = (function () {
     // 2. new ticket    
     ticket = new Ticket({
       description_html: description
-      , subject: bizplan.getSubject() || '未填写'
+      , subject: bizplan.getCompany() || bizplan.getSubject() || '未填写'
       , name: bizplan.getFromName()
       , email: bizplan.getFromEmail()
       
@@ -147,8 +147,6 @@ var Ticketor = (function () {
       ticket.open()
       ticket.reply({
         body_html: bizplan.getBody()
-        // already replied, no cc needed anymore:
-        // , cc_emails: [ table.email ]
       })
       
       return next('replied ticket#' + ticket.getId())
@@ -157,13 +155,13 @@ var Ticketor = (function () {
     // 2. create new ticket
     ticket = new Ticket({
       description_html: bizplan.getBody()
-      , subject: bizplan.getCompany()
+      , subject: bizplan.getCompany() || bizplan.getSubject() || '未填写'
       , name: bizplan.getFromName()
       , email: bizplan.getFromEmail()
     })
     req.ticket = ticket
     
-    return next('created reply as ticket#' + ticket.getId())
+    return next('created ticket#' + ticket.getId())
   }
 
   function process(req, res, next) {

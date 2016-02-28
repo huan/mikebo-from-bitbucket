@@ -68,13 +68,9 @@ var Bizplaner = (function () {
         req.pushError('not all message sent from one sender.')
       }
       
-      // 3. check attachment
-      if (messages[i].getAttachments().length) {
-        noAttachment = false
-      }
     }
     
-    if (noAttachment) {
+    if (!hasAttachment(req.bizplan)) {
       req.pushError('has no attachment')
       isNotBizPlan = true
     }
@@ -208,6 +204,22 @@ var Bizplaner = (function () {
     }
     
     return isToZixia
+  }
+  
+  function hasAttachment(bizplan) {
+    if (!bizplan)                        return false
+    if (bizplan.getAttachments().length) return true
+    
+    var cloudWords = [
+      '邮箱发来的超大附件'
+      , '邮箱发来的云附件'
+    ]
+    
+    var RE = new RegExp(cloudWords.join('|'), 'i')
+    
+    if (RE.test(bizplan.getBody())) return true
+    
+    
   }
   
 }())
