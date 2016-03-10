@@ -34,3 +34,11 @@ function testBug() {
   **/
   Logger.log('cant go here, because 19426 will throw exception')
 }
+
+function testSheet() {
+  
+  log('test')
+  log('test1')
+  log('test2')
+  Logger.log('cant go here, because 19426 will throw exception')
+}

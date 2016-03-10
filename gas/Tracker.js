@@ -2,20 +2,21 @@ var Tracker = (function () {
   'use strict'
   
   var VERSION = '0.1.0'
-  
-  var Tracker = function () {
-  }
-  
-  Tracker.logOnEnd = logOnEnd
-  Tracker.logOnStart = logOnStart
     
-  return Tracker
+  return {
+    // Middle Wares
+    logOnStart: logOnStart
+    , logOnEnd: logOnEnd
+    
+    , logOnTime: logOnTime
+  }
   
   
   ///////////////////////////////////////////////////////////
   
-  
   function logOnStart(req, res, next) {
+    Mailer.labelAdd_Busy(req, res, next)
+
     req.startTime = new Date()
     log(log.DEBUG, '%s start processing %s'
         , req.getChannelName ? req.getChannelName() : 'unknown'
@@ -45,7 +46,7 @@ var Tracker = (function () {
     }
     
     if (noException) Mailer.labelDel_Bug(req, res, next)
-
+    
     log(log.NOTICE, 'C(%s/%ss)[%s] %s'
         , req.getChannelName ? req.getChannelName() : 'unknown channel'
         , Math.floor((new Date() - req.startTime)/1000)
@@ -54,7 +55,14 @@ var Tracker = (function () {
         , errorMsg
        )
     
+    Mailer.labelDel_Busy(req, res, next)
     return next()
   }
+  
+  function logOnTime(req, res, next) {
+    req.pushError('time(' + (new Date() - req.startTime)/1000 + ')')
+    return next()
+  }
+  
   
 }())

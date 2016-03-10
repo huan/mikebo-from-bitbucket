@@ -52,6 +52,7 @@ var GasContact = (function() {
       var lastRow = sheet.getLastRow();
       var emailRange = sheet.getRange(1,1,lastRow,1)
     
+      // time cost about 1 second for getValues
       values = emailRange.getValues()
     
       for (var i=0; i<values.length; i++) {
@@ -239,5 +240,12 @@ var GasContact = (function() {
 }())
 
 function testGasContact() {
-  Logger.log(GasContact.getEmailAddress('zixia+test@zixia.net'))
+  Logger.log('start')
+  Logger.log(GasContact.isMyContact('zixia434124@zixia.net'))
+  Logger.log(GasContact.isMyContact('zixia434124@zixia.net'))
+  Logger.log(GasContact.isMyContact('zixia434124@zixia.net'))
+  Logger.log(GasContact.isMyContact('zixia434124@zixia.net'))
+  Logger.log(GasContact.isMyContact('zixia434124@zixia.net'))
+  Logger.log(GasContact.isMyContact('zixia434124@zixia.net'))
+  Logger.log(GasContact.isMyContact('zixia434124@zixia.net'))
 }

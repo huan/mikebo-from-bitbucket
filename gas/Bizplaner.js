@@ -49,45 +49,35 @@ var Bizplaner = (function () {
     */
     var from = messages[0].getFrom()
     
-    var isNotBizPlan = false
-    var noAttachment = true
-    
+    /**
+    * Check all the messages in thread(also include trashed ones)
+    */
     for (var i=0; i<messages.length; i++) {
       
       if (/@google.com/.test(messages[i].getFrom()) ) continue
       
       // 1. check trashed message
-      if (messages[i].isInTrash()) {
-        isNotBizPlan = true
-        req.pushError('someone have touched this thread')
-      }
+      // duplated check with step 2.
+//      if (messages[i].isInTrash() && messages[i].getFrom() !== messages[0].getFrom()) {
+//        isNotBizPlan = true
+//        req.pushError('someone have touched this thread')
+//      }
       
       // 2. check if other people had replied
-      if (messages[i].getFrom() != from) {
-        isNotBizPlan = true
-        req.pushError('not all message sent from one sender.')
-      }
-      
+      if (messages[i].getFrom() != from) return req.pushError('not all message sent from one sender')
     }
     
-    if (!hasAttachment(req.bizplan)) {
-      req.pushError('has no attachment')
-      isNotBizPlan = true
-    }
-    
-    // stop and return if not bp
-    if (isNotBizPlan) return
+    if (!hasAttachment(req.bizplan)) return req.pushError('has no attachment')
     
     next()
   }
   
   
   function init(req, res, next) {
-    // the first email from entrepreneur, normaly is BP
+    // the current email from entrepreneur, normaly is BP
     var message = req.getMessage()
-    var bizplan = new Bizplan(message)
 
-    req.bizplan = bizplan   
+    req.bizplan = new Bizplan(message)
     return next()
   }
   

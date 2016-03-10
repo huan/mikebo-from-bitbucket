@@ -1,4 +1,4 @@
-function cleanInbox() {
+function MailBot() {
   'use strict'  
 
   // DAYSPAN: how many day(s) looks back by search 
@@ -13,7 +13,7 @@ function cleanInbox() {
     var CODE = undefined
     while (!CODE && TTL-->0) {
       try {
-        CODE = UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gas-gmail-channel/master/src/gas-gmail-channel-lib.js?3').getContentText()
+        CODE = UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gas-gmail-channel/master/src/gas-gmail-channel-lib.js?5').getContentText()
       } catch (e) {
         log(log.ERR, 'UrlFetchApp.fetch exception(ttl:%s): %s', TTL, e.message)
         Utilities.sleep(1000)
@@ -26,9 +26,6 @@ function cleanInbox() {
   } // Class GmailChannel is ready for use now!
 
 
-//  var gasContact = new GasContact()
-
-  var startTime = new Date()
   log(log.DEBUG, 'InboxCleaner starting...')
 
   
@@ -46,29 +43,62 @@ function cleanInbox() {
   //
   // Start Cleaning
   
+  var numProcceed = 0
   
-  doBulkChannel()         // 0. 群发邮件，并且不是发到我的邮箱的
+  var tasks = [
+    doBulkChannel           // 0. 群发邮件，并且不是发到我的邮箱的
 
-  doBpWithCipherChannel() // 1. 只发到 bp@pre 邮箱的，但是有我的名字
-  doBpZixiaChannel()      // 2. 同时发给 zixia@pre 和  bp@pre 邮箱
-  doZixiaChannel()        // 3. 只发到 zixia@pre 邮箱
+    , doBpWithCipherChannel // 1. 只发到 bp@pre 邮箱的，但是有我的名字
+    , doBpZixiaChannel      // 2. 同时发给 zixia@pre 和  bp@pre 邮箱
+    , doZixiaChannel        // 3. 只发到 zixia@pre 邮箱
   
-  doFormChannel()         // 4. 通过表单提交(JsForm)
-  doApplyChannel()        // 5. PreAngel申请表(MikeCRM)
-  doIntviuChannel()       // 6. 橙云面试视频(IntViu)
+    , doFormChannel         // 4. 通过表单提交(JsForm)
+    , doApplyChannel        // 5. PreAngel申请表(MikeCRM)
+    , doIntviuChannel       // 6. 橙云面试视频(IntViu)
   
-  doPlugAndPlayChannel()  // 7. Plug and Play BP
+    , doPlugAndPlayChannel  // 7. Plug and Play BP
+  ]
+  
+  /**
+  * Shuffle an array
+  * http://stackoverflow.com/a/25984542/1123955
+  * http://jsperf.com/fyshuffle
+  */
+  function fy(a, b, c, d) { c=a.length;while(c)b=Math.random()*(--c+1)|0,d=a[c],a[c]=a[b],a[b]=d }
+
+  fy(tasks)
+  
+  for (var i=0; i<tasks.length; i++) {
+    numProcceed += tasks[i]()
+    
+    Logger.log(tasks[i].name)
+    
+    if (Gas.isYourTime()) {
+      log(log.NOTICE, 'MailBot breaked after procceed %s mails, runned %s seconds', numProcceed, Gas.getLifeSeconds())
+      break
+    }
+  }
+  
+//  numProcceed += doBulkChannel()         // 0. 群发邮件，并且不是发到我的邮箱的
+//
+//  numProcceed += doBpWithCipherChannel() // 1. 只发到 bp@pre 邮箱的，但是有我的名字
+//  numProcceed += doBpZixiaChannel()      // 2. 同时发给 zixia@pre 和  bp@pre 邮箱
+//  numProcceed += doZixiaChannel()        // 3. 只发到 zixia@pre 邮箱
+//  
+//  numProcceed += doFormChannel()         // 4. 通过表单提交(JsForm)
+//  numProcceed += doApplyChannel()        // 5. PreAngel申请表(MikeCRM)
+//  numProcceed += doIntviuChannel()       // 6. 橙云面试视频(IntViu)
+//  
+//  numProcceed += doPlugAndPlayChannel()  // 7. Plug and Play BP
   
   // End Cleaning
   //
   /////////////////////////////////////////////////////////////////////
+   
+  if (numProcceed) log(log.DEBUG, 'MailBot procceed %s mails, runned %s seconds', numProcceed, Gas.getLifeSeconds())
   
-  var endTime = new Date()
-  var totalTime = endTime - startTime
   
-  var totalSeconds = Math.floor(totalTime/1000)
-  
-  return log(log.INFO, 'InboxCleaner runned(%ss)', totalSeconds)
+  return numProcceed
 
   
   
@@ -83,17 +113,7 @@ function cleanInbox() {
   //
   //////////////////////////////////////////////////////////////////////////
 
-  
-  
-  
-  
-  
-  function development() {
-    var a = {}
-    log('from: %s', a.from)
-  }
-  
-  
+
   
   
   /******************************************************
@@ -128,6 +148,7 @@ function cleanInbox() {
                 , '-融资申请'
                 , '-最简单的创业计划书'
                 , '-PreAngel创始人申请表'
+                , '-to:bp@pnp.vc'            // PNP 有自己独立的Channel
                ].join(' ')
       
       , doneLabel: 'OutOfBulkChannel'
@@ -137,23 +158,29 @@ function cleanInbox() {
     
     bulkChannel.use(
       Tracker.logOnStart     
-      , Bizplaner.init
+      , Bizplaner.init                            // ?
 
-      , Mailer.skipFromInvalidSender
-      , Mailer.skipFromMyContacts
+      , Tracker.logOnTime                         // measure performance
+      
+      , Mailer.skipFromInvalidSender              // 1s
+      , Mailer.skipFromMyContacts                 // 1s
 
+      , Tracker.logOnTime                         // measure performance
       , Mailer.replySubmitGuideIfMailToBpAddress
       
+      , Tracker.logOnTime                         // measure performance
       , Mailer.labelAdd_ToBeDeleted
       , Mailer.moveToArchive
 
+      , Tracker.logOnTime                         // measure performance
       , Bizplaner.skipInvalidBizplan
       , Mailer.labelAdd_BizPlan
 
+      , Tracker.logOnTime                         // measure performance
       , Bizplaner.ibot
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
-      , Ticketor.close
+      , Ticketor.closeIfNew
     )
     
     return bulkChannel.done(Tracker.logOnEnd)
@@ -219,7 +246,7 @@ function cleanInbox() {
       , Bizplaner.ibot
     )
 
-    bpWithCipherChannel.done(Tracker.logOnEnd)
+    return bpWithCipherChannel.done(Tracker.logOnEnd)
     
   }
 
@@ -279,7 +306,7 @@ function cleanInbox() {
       , Ticketor.noteIbot
     )
 
-    bpZixiaChannel.done(Tracker.logOnEnd)
+    return bpZixiaChannel.done(Tracker.logOnEnd)
 
   }
   
@@ -335,7 +362,7 @@ function cleanInbox() {
       , Mailer.trashBizplan
     )
     
-    zixiaChannel.done(Tracker.logOnEnd)
+    return zixiaChannel.done(Tracker.logOnEnd)
     
   } 
   
@@ -383,7 +410,7 @@ function cleanInbox() {
       , Parser.jsform
       
       , Ticketor.tryToPair
-      , Ticketor.replyOrCreate
+      , Ticketor.noteOrCreate
 
       , Bizplaner.analyzeDetails
       , Ticketor.process
@@ -392,7 +419,7 @@ function cleanInbox() {
       , Mailer.moveToArchive
     )
     
-    formChannel.done(Tracker.logOnEnd)
+    return formChannel.done(Tracker.logOnEnd)
     
   }   
   
@@ -444,7 +471,7 @@ function cleanInbox() {
       , Mailer.moveToArchive
     )
     
-    applyChannel.done(Tracker.logOnEnd)
+    return applyChannel.done(Tracker.logOnEnd)
     
   }   
   
@@ -502,7 +529,7 @@ function cleanInbox() {
       , Mailer.trashMessage
     )
     
-    intviuChannel.done(Tracker.logOnEnd)
+    return intviuChannel.done(Tracker.logOnEnd)
     
   }   
 
@@ -535,15 +562,7 @@ function cleanInbox() {
       , Mailer.moveToArchive
     )
     
-    pnpChannel.done(Tracker.logOnEnd)
+    return pnpChannel.done(Tracker.logOnEnd)
     
   }
-}
-
-function testInboxCleaner() {
-//  theChannel = new GmailChannel({
-//    query: '知食分子BP'
-//    , labels: []
-//    , res: {}
-//  })
 }

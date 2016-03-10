@@ -183,8 +183,8 @@ var Bizplan = (function () {
     function setFounderMobile(s) { BP.founder.mobile = s }
     function getFounderMobile()  { return BP.founder.mobile }
 
-    function setAttachments(a) { BP.attachments = a }
-    function getAttachments()  { return BP.attachments }
+    function setAttachments(a) { if (a instanceof Array) BP.attachments = a }
+    function getAttachments()  { return BP.attachments || [] }
     
     function setFrom(s) { 
       BP.from_name  = GasContact.getEmailName(s)
@@ -338,12 +338,28 @@ var Bizplan = (function () {
       
       // 3.1 there is some room for this attachment
       importantAttachments.push(att)
+      skipMarks[idx] = true
       
     })
     
     /**
     *
-    * 4. finished
+    * 4. keep other HUGE attachemt in the list, and set content to 'DROPPED' (drop the content)
+    *
+    */
+    attachments.forEach(function (att, idx, obj) {
+      if (skipMarks[idx]) return
+      
+      var replacedAtt = Utilities.newBlob('DOPPED').setName(att.getName() + '.txt')
+//      replacedAtt.getSize = function () { return 8 }
+      
+      importantAttachments.push(replacedAtt)
+      skipMarks[idx] = true
+    })
+    
+    /**
+    *
+    * 5. finish
     *
     */
     return importantAttachments

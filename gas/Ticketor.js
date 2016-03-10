@@ -44,9 +44,10 @@ var Ticketor = (function () {
   var Ticketor = function () {
   }
   
-  Ticketor.create  = create
-  Ticketor.process = process
-  Ticketor.close   = function (req, res, next) { req.ticket.close(); next() }
+  Ticketor.create     = create
+  Ticketor.process    = process
+  Ticketor.close      = function (req, res, next) { req.ticket.close(); next() }
+  Ticketor.closeIfNew = function (req, res, next) { if(req.ticket && req.ticket.isNew) req.ticket.close(); next() }
   
   Ticketor.tryToPair = tryToPair
   Ticketor.noteOrCreate = noteOrCreate
@@ -112,25 +113,14 @@ var Ticketor = (function () {
     if (ticket) { 
       ticket.open()
       ticket.note({
-        body_html: description
+        body_html: getHtmlTo(bizplan) + bizplan.getBody()
         , private: true
       })
       return next('added note to ticket#' + ticket.getId())
     } 
     
     // 2. new ticket    
-    ticket = new Ticket({
-      description_html: description
-      , subject: bizplan.getCompany() || bizplan.getSubject() || '未填写'
-      , name: bizplan.getFromName()
-      , email: bizplan.getFromEmail()
-      
-      , attachments: bizplan.getAttachments()
-    })
-    
-    req.ticket = ticket
-    
-    return next('created note as ticket#' + ticket.getId())
+    return create(req, res, next)
   }
 
   /**
@@ -146,22 +136,14 @@ var Ticketor = (function () {
     if (ticket) { 
       ticket.open()
       ticket.reply({
-        body_html: bizplan.getBody()
+        body_html: getHtmlTo(bizplan) + bizplan.getBody()
       })
       
       return next('replied ticket#' + ticket.getId())
     }
     
     // 2. create new ticket
-    ticket = new Ticket({
-      description_html: bizplan.getBody()
-      , subject: bizplan.getCompany() || bizplan.getSubject() || '未填写'
-      , name: bizplan.getFromName()
-      , email: bizplan.getFromEmail()
-    })
-    req.ticket = ticket
-    
-    return next('created ticket#' + ticket.getId())
+    return create(req, res, next)
   }
 
   function process(req, res, next) {
@@ -227,36 +209,21 @@ var Ticketor = (function () {
     
     /**
     *
-    * log all recipients in the email body
-    *
-    */
-    htmlTo = bizplan.getTo()
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    
-    htmlTo = '<p>To: ' + htmlTo + '</p><br />'
-    
-    var description = htmlTo + bizplan.getBody()
-    
-    /**
-    *
     * make payload for api
     *
     */
     var ticketObj = {
-      description_html: description
+      description_html: getHtmlTo(bizplan) + bizplan.getBody()
       , subject: bizplan.getSubject()
       , name:    bizplan.getFromName()
       , email:   bizplan.getFromEmail()
     }
 
     var attachments = bizplan.getAttachments()
-    
-    if (attachments.length) ticketObj.attachments = attachments
+    if (attachments && attachments.length) ticketObj.attachments = attachments
 
     req.ticket = new Ticket(ticketObj)
+    req.ticket.isNew = true
     
     return next('created ticket #' + req.ticket.getId())
   }
@@ -270,7 +237,22 @@ var Ticketor = (function () {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  /**
+  *
+  * log all recipients in the email body
+  *
+  */
+  function getHtmlTo(bizplan) {
+    htmlTo = bizplan.getTo()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    
+    htmlTo = '<p>To: ' + htmlTo + '</p><br />'
 
+    return htmlTo
+  }
   
 
 }())

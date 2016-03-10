@@ -22,6 +22,7 @@ function mikeTestRunner() {
   testGasContact()
   testParser()
   testBizplan()
+  testMailer()
   
   //
   //
@@ -267,6 +268,13 @@ function mikeTestRunner() {
       .reduce(function(s1,s2) { return s1 + s2 }, 0)
 
       t.ok(totalSize <= 1024*1024*10, 'not greater than 10MB')
+    })
+  }
+  
+  function testMailer() {
+    test ('Mailer', function (t) {
+      var exist = Mailer.isAllLabelsExist()
+      t.ok(exist, 'All labels exist')
     })
   }
   
