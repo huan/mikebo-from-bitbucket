@@ -146,7 +146,7 @@ var Bizplan = (function () {
     // 
     // Instance methods
     //
-    function setSubject(s) { BP.subject = s }
+    function setSubject(s) { BP.subject = s || '(no subject)'}
     function getSubject()  { return BP.subject }
       
     function setBody(s) { BP.Body = s }

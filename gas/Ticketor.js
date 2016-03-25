@@ -72,7 +72,8 @@ var Ticketor = (function () {
     
     if (ticket && ibot) { 
       ticket.note({
-        body_html: JSON.stringify(ibot)
+//        body_html: JSON.stringify(ibot)
+        body: JSON.stringify(ibot)
         , private: true
       })
       req.pushError('ibot reported to ticket#' + ticket.getId())
@@ -112,10 +113,16 @@ var Ticketor = (function () {
     // 1. existing ticket
     if (ticket) { 
       ticket.open()
-      ticket.note({
-        body_html: getHtmlTo(bizplan) + bizplan.getBody()
+      
+      var noteObj = {
+//        body_html: getHtmlTo(bizplan) + bizplan.getBody()
+        body: getHtmlTo(bizplan) + bizplan.getBody()
         , private: true
-      })
+      }
+      var attachments = bizplan.getAttachments()
+      if (attachments && attachments.length) noteObj.attachments = attachments
+
+      ticket.note(noteObj)
       return next('added note to ticket#' + ticket.getId())
     } 
     
@@ -135,9 +142,15 @@ var Ticketor = (function () {
     // 1. existing ticket
     if (ticket) { 
       ticket.open()
-      ticket.reply({
-        body_html: getHtmlTo(bizplan) + bizplan.getBody()
-      })
+      
+      var replyObj = {
+//        body_html: getHtmlTo(bizplan) + bizplan.getBody()
+        body: getHtmlTo(bizplan) + bizplan.getBody()
+      }
+      var attachments = bizplan.getAttachments()
+      if (attachments && attachments.length) replyObj.attachments = attachments
+
+      ticket.reply(replyObj)
       
       return next('replied ticket#' + ticket.getId())
     }
@@ -213,7 +226,8 @@ var Ticketor = (function () {
     *
     */
     var ticketObj = {
-      description_html: getHtmlTo(bizplan) + bizplan.getBody()
+//      description_html: getHtmlTo(bizplan) + bizplan.getBody()
+      description: getHtmlTo(bizplan) + bizplan.getBody()
       , subject: bizplan.getSubject()
       , name:    bizplan.getFromName()
       , email:   bizplan.getFromEmail()

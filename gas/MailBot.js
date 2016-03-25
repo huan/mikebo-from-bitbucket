@@ -3,7 +3,7 @@ function MailBot() {
 
   // DAYSPAN: how many day(s) looks back by search 
   var DAYSPAN = 7
-  // LIMIT: how many message(s) processed per call
+  // LIMIT: how many message(s) processed by run once
   var LIMIT   = 7
   
   if ((typeof log)==='undefined') eval ('var log = new GasLog()')
@@ -65,13 +65,12 @@ function MailBot() {
   * http://jsperf.com/fyshuffle
   */
   function fy(a, b, c, d) { c=a.length;while(c)b=Math.random()*(--c+1)|0,d=a[c],a[c]=a[b],a[b]=d }
-
   fy(tasks)
   
   for (var i=0; i<tasks.length; i++) {
     numProcceed += tasks[i]()
     
-    Logger.log(tasks[i].name)
+//    Logger.log(tasks[i].name)
     
     if (Gas.isYourTime()) {
       log(log.NOTICE, 'MailBot breaked after procceed %s mails, runned %s seconds', numProcceed, Gas.getLifeSeconds())
@@ -158,29 +157,34 @@ function MailBot() {
     
     bulkChannel.use(
       Tracker.logOnStart     
-      , Bizplaner.init                            // ?
-
+      
       , Tracker.logOnTime                         // measure performance
       
       , Mailer.skipFromInvalidSender              // 1s
       , Mailer.skipFromMyContacts                 // 1s
-
+      
       , Tracker.logOnTime                         // measure performance
       , Mailer.replySubmitGuideIfMailToBpAddress
       
       , Tracker.logOnTime                         // measure performance
       , Mailer.labelAdd_ToBeDeleted
       , Mailer.moveToArchive
-
+      
       , Tracker.logOnTime                         // measure performance
+      , Bizplaner.init                            // ?
+      
       , Bizplaner.skipInvalidBizplan
       , Mailer.labelAdd_BizPlan
 
       , Tracker.logOnTime                         // measure performance
       , Bizplaner.ibot
+      , Tracker.logOnTime                         // measure performance
       , Ticketor.tryToPair
+      , Tracker.logOnTime                         // measure performance
       , Ticketor.noteOrCreate
+      , Tracker.logOnTime                         // measure performance
       , Ticketor.closeIfNew
+      , Tracker.logOnTime                         // measure performance
     )
     
     return bulkChannel.done(Tracker.logOnEnd)
@@ -277,7 +281,7 @@ function MailBot() {
       , dayspan: DAYSPAN
       , query: [ 'to:(zixia@pre-angel.com OR zixia@preangelpartners.com)'
                 , 'to:(bp@pre-angel.com OR bp@preangelpartners.com)'
-                , 'has:attachment'
+                , '(has:attachment OR "邮箱发来的超大附件" OR "邮箱发来的云附件")'
                ].join(' ')
       , doneLabel: 'OutOfBpZixiaChannel'
       , limit: LIMIT
