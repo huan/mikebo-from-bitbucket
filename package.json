@@ -1,31 +1,32 @@
 {
-  "name": "mikebo"
-  , "version": "0.1.0"
-  , "description": "zixia's robot for make life easier"
-  , "main": "index.js"
-  , "directories": {
+  "name": "mikebo",
+  "version": "0.1.0",
+  "description": "zixia's robot for make life easier",
+  "main": "index.js",
+  "directories": {
     "doc": "wiki"
-  }
-  , "dependencies": {
-    "node-google-apps-script": "^1.1.3"
-  }
-  , "devDependencies": {}
-  , "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-    , "pull": "scripts/pull.sh"
-  }
-  , "repository": {
+  },
+  "dependencies": {
+    "node-google-apps-script": "^1.1.3",
+    "wechaty": "0.0.7"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pull": "scripts/pull.sh"
+  },
+  "repository": {
     "type": "git",
     "url": "git+ssh://git@bitbucket.org/zixia/mikebo.git"
-  }
-  , "keywords": [
-    "zixia"
-    , "mike"
-    , "bot"
-    , "mikebo"
-    , "robot"
+  },
+  "keywords": [
+    "zixia",
+    "mike",
+    "bot",
+    "mikebo",
+    "robot"
   ],
-  "author": "Zhuohuan LI <zixia@zixia.net>"
-  , "license": "GPL-3.0"
-  , "homepage": "https://bitbucket.org/zixia/mikebo/wiki"
+  "author": "Zhuohuan LI <zixia@zixia.net>",
+  "license": "GPL-3.0",
+  "homepage": "https://bitbucket.org/zixia/mikebo/wiki"
 }
