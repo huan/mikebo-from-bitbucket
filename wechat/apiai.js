@@ -38,7 +38,7 @@ bot
   co(function* () {
     yield m.ready()
 
-    log.info('Bot', 'recv: %s'  , m)
+    // log.info('Bot', 'recv: %s'  , m)
     if (m.group()) {  // group message
      if (/Wechaty/i.test(m.group().name())) {
       log.info('Bot', 'wechaty talk: %s'  , m)
@@ -51,7 +51,7 @@ bot
       }
     }
   })
-  .catch(e => log.error('Bot', 'on message rejected: %s' , e))
+  .catch(e => log.error('Bot', 'on message co rejected: %s' , e))
 })
 
 bot.init()
@@ -62,15 +62,19 @@ bot.init()
 })
 
 class Talker extends EventEmitter2 {
-  constructor(thinker) {
+  constructor() {
     log.verbose('Talker()')
     super()
-    this.thinker = thinker
     this.obj = {
       text: []
       , time: []
     }
     this.timer = null
+  }
+
+  init(thinker) {
+    this.thinker = thinker
+    return Promise.resolve(this)
   }
 
   save(text) {
@@ -118,15 +122,22 @@ class Talker extends EventEmitter2 {
 var Talkers = []
 
 function talk(m) {
+  /*
+  info Bot stranger talk: Message#82(<郑莲英13>:{SYS}郑莲英13 just added ...)
+  ERR! Bot TypeError: Cannot read property 'id' of null
+
+  XXX: {SYS} message has no id???
+  */
   const fromId  = m.from().id
+  const fromName = m.from().name()
   const groupId = m.group().id
   const content = m.content().replace(/(<([^>]+)>)/ig,'')
   
   let talkerName  = fromId + groupId
-  talkerName      = require('crypto').createHash('md5').update(talkerName).digest("hex");
+  talkerName      = require('crypto').createHash('md5').update(talkerName).digest("hex")
 
   if (!Talkers[talkerName]) {
-    Talkers[talkerName] = new Talker(function(text) {
+    const tinker = function(text) {
       return new Promise((resolve, reject) => {
         apiAi.textRequest(text, {
           language:     'zh-cn'
@@ -136,10 +147,10 @@ function talk(m) {
           console.log(response)
           const reply = response.result.fulfillment.speech
           if (!reply) {
-            log.info('ApiAi', `Talker[${talkerName}] do not want to talk for "${text}"`)
+            log.info('ApiAi', `Talker[${fromName}@${talkerName}] do not want to talk for "${text}"`)
             return reject()
           }
-          log.info('ApiAi', `Talker[%s] reply:"%s" for "%s" `, talkerName, reply, text)
+          log.info('ApiAi', `Talker[%s@%s] reply:"%s" for "%s" `, fromName, talkerName, reply, text)
           return resolve(reply)
         })
         .on('error', function(error) {
@@ -148,8 +159,10 @@ function talk(m) {
         })
         .end()
       })
-    })
-    Talkers[talkerName].on('say', reply => bot.reply(m, reply))
+    }
+    Talkers[talkerName] = new Talker()
+    .on('say', reply => bot.reply(m, reply))
+    .init(thinker)
   }
   Talkers[talkerName].hear(content)
 }
