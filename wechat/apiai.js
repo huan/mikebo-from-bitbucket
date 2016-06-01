@@ -2,8 +2,7 @@
  *
  * Wechaty bot use a ApiAi.com brain
  *
- * Apply Your Own ApiAi Developer API_KEY at: 
- * http://www.api.ai
+ * Mike Bo @ Wechat
  *
  * Enjoy!
  *
@@ -14,7 +13,7 @@ const log = require('npmlog')
 const co  = require('co')
 const EventEmitter2 = require('eventemitter2')
 
-const Wechaty = require('wechaty')
+const Wechaty = require('../../../workspace/')
 //log.level = 'verbose'
 // log.level = 'silly'
 
@@ -130,27 +129,27 @@ function talk(m) {
   */
   const fromId  = m.from().id
   const fromName = m.from().name()
-  const groupId = m.group().id
+  const groupId = m.group() ? m.group().id : ''
   const content = m.content().replace(/(<([^>]+)>)/ig,'')
   
-  let talkerName  = fromId + groupId
-  talkerName      = require('crypto').createHash('md5').update(talkerName).digest("hex")
+  let talkerId  = fromId +  groupId
+  talkerId      = require('crypto').createHash('md5').update(talkerId).digest("hex")
 
-  if (!Talkers[talkerName]) {
-    const tinker = function(text) {
+  if (!Talkers[talkerId]) {
+    const thinker = function(text) {
       return new Promise((resolve, reject) => {
         apiAi.textRequest(text, {
           language:     'zh-cn'
-          , sessionId:  talkerName
+          , sessionId:  talkerId
         })
         .on('response', function(response) {
           console.log(response)
           const reply = response.result.fulfillment.speech
           if (!reply) {
-            log.info('ApiAi', `Talker[${fromName}@${talkerName}] do not want to talk for "${text}"`)
+            log.info('ApiAi', `Talker[${fromName}@${talkerId}] do not want to talk for "${text}"`)
             return reject()
           }
-          log.info('ApiAi', `Talker[%s@%s] reply:"%s" for "%s" `, fromName, talkerName, reply, text)
+          log.info('ApiAi', `Talker[%s@%s] reply:"%s" for "%s" `, fromName, talkerId, reply, text)
           return resolve(reply)
         })
         .on('error', function(error) {
@@ -160,9 +159,15 @@ function talk(m) {
         .end()
       })
     }
-    Talkers[talkerName] = new Talker()
+    Talkers[talkerId] = new Talker()
+    
+    Talkers[talkerId]
     .on('say', reply => bot.reply(m, reply))
     .init(thinker)
   }
-  Talkers[talkerName].hear(content)
+
+  // console.log(Talkers[talkerId])
+  // console.log(Talkers[talkerId].hear)
+  
+  Talkers[talkerId].hear(content)
 }
