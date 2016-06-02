@@ -32,7 +32,7 @@ var bot = new BotBuilder.TextBot({minSendDelay: 0})
 .add('/getNumber', Waterfall.getNumber)
 .on('error', e => log.error('TextBot', e))
 .on('reply', function (reply) {
-  console.log('reply to who??? event reply: ' + reply.text)
+  log.verbose('Luis', `reply ${reply.to.address} with ${reply.text}`)
 })
 
 const dialogMessage = {

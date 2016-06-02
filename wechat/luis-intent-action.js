@@ -11,16 +11,17 @@ const IntentAction = {
   BizPlan: [
     // BizPlan - 1.
     function BianPlanStep1(session, args, next) {
-      log.verbose('Waterfall', 'bizplan()')
+      log.verbose('IntentAction', 'BizPlan')
+
       session.send(replies('mailBizplan'))
       // console.log(session)
       const address = session.message.from.address
       const userData = session.userData
       const dialogData = session.dialogData
 
-      log.verbose('Waterfall', `default() address: %s`, util.inspect(address))
-      log.verbose('Waterfall', 'default() userData: %s', util.inspect(userData))
-      log.verbose('Waterfall', 'default() dialogData: %s', util.inspect(dialogData))
+      log.verbose('IntentAction', `default() address: %s`, util.inspect(address))
+      log.verbose('IntentAction', 'default() userData: %s', util.inspect(userData))
+      log.verbose('IntentAction', 'default() dialogData: %s', util.inspect(dialogData))
 
       if (dialogData[address]) {
         dialogData[address] += 1
@@ -28,7 +29,7 @@ const IntentAction = {
         dialogData[address] = 1
       }
       let n = dialogData[address]
-      log.verbose('Waterfall',`default() ${address} ${n} times`)
+      log.verbose('IntentAction',`default() ${address} ${n} times`)
 
       next({bizplan: true})
     }
@@ -37,7 +38,7 @@ const IntentAction = {
       session.beginDialog('/getCity', { prompt: "你在哪个城市？" })
     }
     , function BizPlanStep3(session, results, next) {
-      log.verbose('Waterfall', 'default() %s', util.inspect(results))
+      log.verbose('IntentAction', 'default() %s', util.inspect(results))
 
       // Check their answer
       if (results.response) {
@@ -51,7 +52,7 @@ const IntentAction = {
       session.beginDialog('/getMoney', { prompt: "你们融资金额是？"})
     }
     , function (session, results, next) {
-      log.verbose('Waterfall', 'default() %s', util.inspect(results))
+      log.verbose('IntentAction', 'default() %s', util.inspect(results))
 
       // Check their answer
       if (results.response) {
@@ -65,7 +66,7 @@ const IntentAction = {
       session.beginDialog('/getNumber', { prompt: "你们团队多少人？"})
     }
     , function (session, results, next) {
-      log.verbose('Waterfall', 'default() %s', util.inspect(results))
+      log.verbose('IntentAction', 'default() %s', util.inspect(results))
 
       // Check their answer
       if (results.response) {
@@ -83,46 +84,11 @@ const IntentAction = {
 
   /**
    *
-   * IntentAction: None
-   *
-   */
-  , None: [
-    function (session, args, next) {
-      log.verbose('Waterfall', 'default()')
-      session.send("Hi %s, glad to see you.", session.userData.name);
-      // console.log(session)
-      const address = session.message.from.address
-      const userData = session.userData
-      const dialogData = session.dialogData
-
-
-      log.verbose('Waterfall', `default() address: %s`, util.inspect(address))
-      log.verbose('Waterfall', 'default() userData: %s', util.inspect(userData))
-      log.verbose('Waterfall', 'default() dialogData: %s', util.inspect(dialogData))
-
-      if (dialogData[address]) {
-        dialogData[address] += 1
-      } else {
-        dialogData[address] = 1
-      }
-      let n = dialogData[address]
-      log.verbose('Waterfall',`default() ${address} ${n} times`)
-
-      next({haha: 'xixi'})
-    }
-
-    , function (sesssion, args) {
-      log.verbose('Waterfall', 'default() %s', util.inspect(args))
-    }
-  ]
-
-  /**
-   *
    * IntentAction: Greeting
    *
    */
   , Greeting: function (session, args) {
-    log.verbose('Waterfall', 'greeting()')
+    log.verbose('IntentAction', 'Greeting')
 
     const userData = session.userData
     const dialogData = session.dialogData
@@ -138,11 +104,20 @@ const IntentAction = {
 
   /**
    *
+   * IntentAction: None
+   *
+   */
+  , None: function (sesssion, args) {
+    log.verbose('IntentAction', 'None %s', util.inspect(args))
+  }
+
+  /**
+   *
    * IntentAction: No Intent
    *
    */
   , Default: function (session, args) {
-    log.verbose('Waterfall', 'greeting()')
+    log.verbose('IntentAction', 'Default')
 
     const userData = session.userData
     const dialogData = session.dialogData

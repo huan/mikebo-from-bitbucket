@@ -31,10 +31,12 @@ const Waterfall = {
 
   , getMoney: function(session, results) {
     Prompts.choice(session, "你们本轮融资需要多少钱？", ["数十万", "数百万", "没想好"])
+    // session.endDialog({ response: { bar: 'foo' }});
   }
 
   , getNumber: function(session, results) {
     Prompts.number(session, '你们团队多少人？')
+    // session.endDialog({ response: { bar: 'foo' }});
   }
 }
 
