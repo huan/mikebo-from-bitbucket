@@ -53,13 +53,16 @@ Mike@Wechat Loading...
 
 const wechaty = new Wechaty({head: false})
 .on('scan', ({url, code}) => {
-  console.log(`[${code}]Scan qrcode in url to login:\n${url}`)
+  console.log(`Scan qrcode in url to login: ${code}\n${url}`)
 })
-.on('login'  , user => log.info('Bot', `bot login: ${user}`))
+.on('login'  , user => {
+  user.ready()
+  .then(u => log.info('Bot', `bot login: ${user.toStringEx()}`))
+})
 .on('logout' , e => log.info('Bot', 'bot logout.'))
 .on('message', m => {
   m.ready().then(() => {
-    log.info('Bot', 'recv: %s'  , m)
+    log.verbose('Bot', 'recv: %s'  , m.toStringEx())
     if (isWechatyChannel(m)) {
       log.info('Bot', 'Wechaty hear: %s', m)
       const dialogMessage = wechatyMessage2TextBotReply(m)
@@ -78,20 +81,30 @@ wechaty.init()
 })
 
 textBot.on('reply', function (reply) {
-  log.info('Luis', `event[reply] to ${reply.to.address} with ${reply.text}`)
-  const m = textBotReply2WechatyMessage(reply)
-  console.log(util.inspect(m))
-  wechaty.send(m)
+  const c = Wechaty.Contact.load(reply.to.address)
+  c.ready()
+  .then(() => {
+    log.info('Luis', `event[reply] to ${c.name()}:"${reply.text}"`)
+
+    const m = textBotReply2WechatyMessage(reply)
+    // console.log(util.inspect(m))
+    wechaty.send(m)
+  })
 })
 
 function isWechatyChannel(m) {
+  log.silly('Luis', 'isWechatyChannel()')
   if (m.group()) {  // group message
-    if (/Wechaty/i.test(m.group().name())) {
+    const g = new Wechaty.Group.load(m.group())
+    // console.log(g)
+    // log.silly('Luis', 'group name %s', g.name())
+    if (/Wechaty/i.test(g.name())) {
       return true
     }
   } else {          // not group message
-    if (m.from().stranger()) {
-      return true
+    const f = Wechaty.Contact.load(m.from())
+    if (f.stranger()) {
+      // return true
     }
   }
   return false
@@ -110,6 +123,8 @@ function wechatyCallback(err, reply) {
 function textBotReply2WechatyMessage(reply) {
   const to = reply.to.address
   const content = reply.text
+  // console.log(reply)
+// log.warn('Reply', 'to: %s', to)
 
   return new Wechaty.Message()
   .set('to', to)
@@ -121,7 +136,7 @@ function wechatyMessage2TextBotReply(m) {
     text: m.content()
     , from: {
       channelId: 'wechat'
-      , address: m.from()
+      , address: m.group() ? m.group() : m.from()
     }
   }
 }

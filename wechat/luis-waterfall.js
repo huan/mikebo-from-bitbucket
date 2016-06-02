@@ -1,5 +1,6 @@
-const log = require('npmlog')
 const util = require('util')
+const log = require('npmlog')
+log.level = 'silly'
 
 const BotBuilder = require('/home/ubuntu/git/BotBuilder/Node')
 const DialogAction      = BotBuilder.DialogAction
