@@ -24,6 +24,8 @@ const IntentAction = require('./luis-intent-action')
 const Middleware = require('./luis-middleware')
 const Waterfall = require('./luis-waterfall')
 
+const Commander = require('./wechaty-commander')
+
 ////////////////////////////////////////////////////////////
 const model = 'https://api.projectoxford.ai/luis/v1/application?id=a672fa00-adb4-4420-9f83-f6f674a1f438&subscription-key=2bc35bd5cc7f42e0839dd8400aafcd08'
 // PreView mode not support(yet) 2016/6/2
@@ -38,7 +40,7 @@ const luis = new BotBuilder.LuisDialog(model)
 
 /////////////////////////////////////////////////////////////
 const textBot = new BotBuilder.TextBot({minSendDelay: 0})
-.use(Middleware.commandController)
+.use(Middleware.commander)
 .use(Middleware.firstRun)
 .add('/', luis)
 .add('/firstrun', Waterfall.firstRun)
@@ -63,10 +65,13 @@ const wechaty = new Wechaty({head: false})
 .on('message', m => {
   m.ready().then(() => {
     log.verbose('Bot', 'recv: %s'  , m.toStringEx())
-    if (isWechatyChannel(m)) {
+    let reply = Commander(m)
+    if(reply) {
+      return wechaty.send(m.reply(reply))
+    } else if (!m.self() && isWechatyChannel(m)) {
       log.info('Bot', 'Wechaty hear: %s', m)
       const dialogMessage = wechatyMessage2TextBotReply(m)
-      textBot.processMessage(dialogMessage)//, (err, reply) => wechatyCallback)
+      return textBot.processMessage(dialogMessage)//, (err, reply) => wechatyCallback)
     }
   }).catch(e => {
     log.error('Bot', 'error: %s', e)
