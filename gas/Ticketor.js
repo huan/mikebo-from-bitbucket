@@ -15,7 +15,7 @@ var Ticketor = (function () {
       try {
         CODE = UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gas-freshdesk/master/src/gas-freshdesk-lib.js').getContentText()
       } catch (e) {
-        log(log.ERR, 'UrlFetchApp.fetch exception(ttl:%s): %s', TTL, e.message)
+        log(log.ERR, 'UrlFetchApp.fetch freshdesk lib exception(ttl:%s): %s', TTL, e.message)
         Utilities.sleep(1000)
       }
     }
@@ -60,23 +60,23 @@ var Ticketor = (function () {
   Ticketor.assignChen = function (req, res, next) { req.ticket.assign(ID_AGENT_CHEN); next() }  
   Ticketor.assignPnp = function (req, res, next) { req.ticket.setGroup(ID_GROUP_PNP); next() }
   
-  Ticketor.noteIbot = noteIbot
+  Ticketor.noteCinderella = noteCinderella
   
   return Ticketor
   
   /////////////////////////////////////////////////////////// 
   
-  function noteIbot(req, res, next) {
+  function noteCinderella(req, res, next) {
     var ticket = req.ticket
-    var ibot = req.ibot
+    var cinderella = req.cinderella
     
-    if (ticket && ibot) { 
+    if (ticket && cinderella) { 
       ticket.note({
-//        body_html: JSON.stringify(ibot)
-        body: JSON.stringify(ibot)
+//        body_html: JSON.stringify(cinderella)
+        body: 'Cinderella: ' + JSON.stringify(cinderella, null, ' ')
         , private: true
       })
-      req.pushError('ibot reported to ticket#' + ticket.getId())
+      req.pushError('cinderella reported to ticket#' + ticket.getId())
     }
     
     return next()
@@ -115,7 +115,6 @@ var Ticketor = (function () {
       ticket.open()
       
       var noteObj = {
-//        body_html: getHtmlTo(bizplan) + bizplan.getBody()
         body: getHtmlTo(bizplan) + bizplan.getBody()
         , private: true
       }
@@ -144,7 +143,6 @@ var Ticketor = (function () {
       ticket.open()
       
       var replyObj = {
-//        body_html: getHtmlTo(bizplan) + bizplan.getBody()
         body: getHtmlTo(bizplan) + bizplan.getBody()
       }
       var attachments = bizplan.getAttachments()
@@ -226,7 +224,6 @@ var Ticketor = (function () {
     *
     */
     var ticketObj = {
-//      description_html: getHtmlTo(bizplan) + bizplan.getBody()
       description: getHtmlTo(bizplan) + bizplan.getBody()
       , subject: bizplan.getSubject()
       , name:    bizplan.getFromName()
@@ -257,16 +254,26 @@ var Ticketor = (function () {
   *
   */
   function getHtmlTo(bizplan) {
-    htmlTo = bizplan.getTo()
+    var htmlTo = bizplan.getTo()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+
+    var htmlCc = bizplan.getCc()
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     
-    htmlTo = '<p>To: ' + htmlTo + '</p><br />'
-
-    return htmlTo
+    return ['<p>To: '
+            , htmlTo
+            , '</p><br />'
+            
+            , '<p>Cc: '
+            , htmlCc
+            , '</p><br />'
+           ].join()
   }
-  
 
 }())

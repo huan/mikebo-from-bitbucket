@@ -8,17 +8,18 @@
 if ((typeof GasLog)==='undefined') { // GasL Initialization. (only if not initialized yet.)
   var TTL = 3
   var CODE = undefined
+  var errMsg = ''
   while (!CODE && TTL--) {
     try {
       CODE = UrlFetchApp.fetch('https://raw.githubusercontent.com/zixia/gasl/master/src/gas-log-lib.js').getContentText()
     } catch (e) {
       Logger.log('UrlFetchApp.fetch exception: ' + e.message)
+      errMsg = e.message
       Utilities.sleep(1000)
     }
   }
-  if (CODE) {
-    eval(CODE)
-  } 
+  if (CODE) eval(CODE)
+  else      throw new Error('GasLog library initial failed! [' + errMsg + ']');
 } // Class GasLog is ready for use now!
 
 var log = new GasLog({

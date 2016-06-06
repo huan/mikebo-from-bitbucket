@@ -34,7 +34,7 @@ var Tracker = (function () {
     var errorMsg = ''
     var noException = true
     
-    if (errors.length) {
+    if (errors && errors.length) {
       errorMsg = errors.map(function (e) { 
         if (e instanceof Error) {
           noException = false

@@ -12,6 +12,7 @@ function mikeTestRunner() {
 //  return development() + test.finish()
 //  return testBizplan() + test.finish()
 //  return testParser() + test.finish()
+  return testGasContact() + test.finish()
   //
   ///////////////////////////////////////
   
@@ -196,6 +197,12 @@ function mikeTestRunner() {
       var EXPECTED_EMAIL = 'qsw@qushuawang.com'
       var email = GasContact.getEmailAddress(FROM)
       t.equal(email, EXPECTED_EMAIL, 'extract email address with quota')
+      
+      
+      var FROM = 'Leon Y Zhang @ Savills, CD <LeonY.Zhang@savills.com.cn>'
+      var EXPECTED_EMAIL = 'LeonY.Zhang@savills.com.cn'
+      var email = GasContact.getEmailAddress(FROM)
+      t.equal(email, EXPECTED_EMAIL, 'extract email address with "@/,"')
       ///////////////////////////////////////////////////////////////
     })
     

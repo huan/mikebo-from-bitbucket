@@ -10,25 +10,25 @@ var Bizplaner = (function () {
   Bizplaner.init = init
   Bizplaner.analyzeDetails = analyzeDetails
 
-  Bizplaner.ibot = ibot
+  Bizplaner.cinderella = cinderella
   
   return Bizplaner
   
   
   ///////////////////////////////////////////////////////////
   
-  function ibot(req, res, next) {
+  function cinderella(req, res, next) {
     var bizplan = req.bizplan
     
-//    req.ibot = IBot.query({
-//      from: bizplan.getFromEmail()
-//      , to: bizplan.getTo()
-//      , subject: bizplan.getSubject()
-//      , body: bizplan.getBody()
-//      , attachment: bizplan.getAttachments()
-//    })
+    req.cinderella = Cinderella.query({
+      from: bizplan.getFromEmail()
+      , to: bizplan.getTo()
+      , subject: bizplan.getSubject()
+      , body: bizplan.getBody()
+      , attachment: bizplan.getAttachments()
+    })
     
-    return next('fake iboted')
+    return next('fake cinderella-ed')
   }
   
   /**

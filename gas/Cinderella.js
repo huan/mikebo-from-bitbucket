@@ -1,23 +1,22 @@
-var IBot = (function () {
+var Cinderella = (function () {
   'use strict'
   
   var VERSION = '0.1.0'
   
-//  var ENDPOINT = 'http://111.207.243.70:8088/IbotInfo/GetInfo'
+//  var ENDPOINT = 'http://111.207.243.70:8838/Cinderella/GetInfo'
   
   // HK proxy
   // $ sudo apt-get update && sudo apt-get install socat
   // $ socat TCP-LISTEN:8088,fork TCP:111.207.243.70:8088
-  var ENDPOINT = 'http://119.28.15.194:8088/IbotInfo/GetInfo'
-//  var ENDPOINT = 'http://119.28.15.194:8888/IbotInfo/GetInfo'
+  var ENDPOINT = 'http://106.186.29.141:8838/Cinderella/GetInfo'
   
-  var IBot = function () {
+  var Cinderella = function () {
   }
   
-  IBot.query = query
+  Cinderella.query = query
 
     
-  return IBot
+  return Cinderella
   
   
   ///////////////////////////////////////////////////////////
@@ -30,12 +29,12 @@ var IBot = (function () {
     var payload = {
       sender: options.from || 'zixia@zixia.net'
       , receiver: options.to || 'bupt@bupt.edu'
-      , sendtime: '2015-12-16 10:43'
+      , sendtime: getSendTime()
       , subject: options.subject || '测试demo'
       , body: options.body || '快塞给我一封邮件吧！'
       
       // bug compatible
-      , uploadFiles: Utilities.newBlob('TEST DATA1').setName('test-data1.dat') // XXX bug compatible
+//      , uploadFiles: Utilities.newBlob('TEST DATA1').setName('test-data1.dat') // XXX bug compatible
     }
     
     if (options.attachment) {
@@ -74,10 +73,24 @@ var IBot = (function () {
     return retObj
   }
   
+  function getSendTime() {
+    var date = new Date()
+    
+    var year = date.getFullYear()
+    var month = date.getMonth() + 1
+    var day = date.getDate()
+    var hour = date.getHours()
+    var minute = date.getMinutes()
+    
+    var sendtime = year + '-' + month + '-' + day + ' ' + hour + ':' + minute
+//    Logger.log(sendtime)
+    return sendtime
+  }  
 }())
 
-function testIBot() {
-  Logger.log(JSON.stringify(IBot.query({
-//    attachment: Utilities.newBlob('TEST DATA1').setName('test-data1.dat')
+function testCinderella() {
+  Logger.log(JSON.stringify(Cinderella.query({
+    attachment: Utilities.newBlob('TEST DATA1 北京 融资 项目 一百万 10%').setName('北京阿卡科技有限公司-大宝贝商业计划书')
   })))
+  
 }

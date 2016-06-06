@@ -73,23 +73,11 @@ function MailBot() {
 //    Logger.log(tasks[i].name)
     
     if (Gas.isYourTime()) {
-      log(log.NOTICE, 'MailBot breaked after procceed %s mails, runned %s seconds', numProcceed, Gas.getLifeSeconds())
+      log(log.DEBUG, 'MailBot breaked after procceed %s mails, runned %s seconds', numProcceed, Gas.getLifeSeconds())
       break
     }
   }
-  
-//  numProcceed += doBulkChannel()         // 0. 群发邮件，并且不是发到我的邮箱的
-//
-//  numProcceed += doBpWithCipherChannel() // 1. 只发到 bp@pre 邮箱的，但是有我的名字
-//  numProcceed += doBpZixiaChannel()      // 2. 同时发给 zixia@pre 和  bp@pre 邮箱
-//  numProcceed += doZixiaChannel()        // 3. 只发到 zixia@pre 邮箱
-//  
-//  numProcceed += doFormChannel()         // 4. 通过表单提交(JsForm)
-//  numProcceed += doApplyChannel()        // 5. PreAngel申请表(MikeCRM)
-//  numProcceed += doIntviuChannel()       // 6. 橙云面试视频(IntViu)
-//  
-//  numProcceed += doPlugAndPlayChannel()  // 7. Plug and Play BP
-  
+    
   // End Cleaning
   //
   /////////////////////////////////////////////////////////////////////
@@ -126,6 +114,14 @@ function MailBot() {
   */
   function doBulkChannel() {
     
+    var whiteFromDomains = [
+      'plugandplaychina.com'
+      , 'plugandplaytechcenter.com'
+      , 'plugandplaytc.com'
+      , 'pnp.vc'
+      , 'jsform.com'
+    ]
+    
     var bulkChannel = new GmailChannel ({
       name: 'bulk'
       , keywords: []
@@ -148,7 +144,8 @@ function MailBot() {
                 , '-最简单的创业计划书'
                 , '-PreAngel创始人申请表'
                 , '-to:bp@pnp.vc'            // PNP 有自己独立的Channel
-               ].join(' ')
+               ].join(' ') 
+      + ' -from:(' + whiteFromDomains.join(' OR ') + ')'
       
       , doneLabel: 'OutOfBulkChannel'
       , limit: LIMIT
@@ -177,13 +174,16 @@ function MailBot() {
       , Mailer.labelAdd_BizPlan
 
       , Tracker.logOnTime                         // measure performance
-      , Bizplaner.ibot
       , Tracker.logOnTime                         // measure performance
       , Ticketor.tryToPair
       , Tracker.logOnTime                         // measure performance
       , Ticketor.noteOrCreate
       , Tracker.logOnTime                         // measure performance
       , Ticketor.closeIfNew
+      , Tracker.logOnTime                         // measure performance
+
+      , Bizplaner.cinderella
+      , Ticketor.noteCinderella
       , Tracker.logOnTime                         // measure performance
     )
     
@@ -247,7 +247,8 @@ function MailBot() {
       , Ticketor.process
       , Mailer.trashBizplan
 
-      , Bizplaner.ibot
+      , Bizplaner.cinderella
+      , Ticketor.noteCinderella
     )
 
     return bpWithCipherChannel.done(Tracker.logOnEnd)
@@ -306,8 +307,8 @@ function MailBot() {
       , Ticketor.process
       , Mailer.trashBizplan
       
-      , Bizplaner.ibot
-      , Ticketor.noteIbot
+      , Bizplaner.cinderella
+      , Ticketor.noteCinderella
     )
 
     return bpZixiaChannel.done(Tracker.logOnEnd)
@@ -543,7 +544,7 @@ function MailBot() {
       name: 'PnP'
       , labels: [ 'inbox', '-trash' ]
       , dayspan: DAYSPAN
-      , query: 'to:bp@pnp.vc'
+      , query: 'to:bp@pnp.vc (NOT to:zixia)'
       
       , doneLabel: 'OutOfPnPChannel'
       
