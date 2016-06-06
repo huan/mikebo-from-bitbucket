@@ -59,7 +59,7 @@ console.log('\nMike@Wechat Loading...\n')
 
 const wechaty = new Wechaty({head: false})
 .on('scan', ({url, code}) => {
-  console.log(`Scan QRCode: ${code}\n${url}`)
+  console.log(`Scan QR Code: ${code}\n${url}`)
 })
 .on('login'  , user => {
   user.ready()
@@ -67,7 +67,7 @@ const wechaty = new Wechaty({head: false})
 })
 .on('logout' , user => log.info('Bot', `bot logout: ${user.name()}`))
 
-wechaty.on('message', onWechatyMessage)
+wechaty.on('message', m => m.ready().then(onWechatyMessage))
 
 function onWechatyMessage(m) {
   const from = m.get('from')
@@ -105,19 +105,25 @@ function needMikey(message) {
     const roomName = Wechaty.Room
     .load(room)
     .get('name')
-    // log.silly('Mikey', 'group name %s', r.name())
+
     if (/Wechaty/i.test(roomName)) {
+      log.silly('Mikey', 'need mikey in group name %s', roomName)
       return true
     }
+     log.silly('Mikey', 'no need mikey in group name %s', roomName)
   } else {          // not group message
     const isStranger = Wechaty.Contact
     .load(from)
     .get('stranger')
 
     if (isStranger) {
+      log.silly('Mikey', 'its a stranger msg')
       // return true
+    } else {
+      log.silly('Mikey', 'its a friend msg')
     }
   }
+  log.silly('Mikey', 'no need mikey')
   return false
 }
 
@@ -167,4 +173,5 @@ function startWechaty() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-startCli()
+// startCli()
+startWechaty()
