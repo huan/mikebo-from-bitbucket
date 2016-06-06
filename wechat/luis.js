@@ -1,6 +1,6 @@
 /**
  *
- * Wechaty bot use a ApiAi.com brain
+ * Wechaty bot Mikey
  *
  * Mike Bo @ Wechat
  *
@@ -17,20 +17,26 @@ log.level = 'silly'
 
 const EventEmitter2 = require('eventemitter2')
 
-const Wechaty = require('/home/ubuntu/workspace/')
-const BotBuilder = require('/home/ubuntu/git/BotBuilder/Node')
-
 const IntentAction = require('./luis-intent-action')
 const Middleware = require('./luis-middleware')
 const Waterfall = require('./luis-waterfall')
 
-const Commander = require('./wechaty-commander')
+const Commander = require('./commander')
+const Mikey = require('./mikey')
 
-////////////////////////////////////////////////////////////
+const {Wechaty, BotBuilder} = require('./requires')
+
+///////////////////////////////////////////////////////////////////////////////
+/**
+ *
+ * Luis
+ *
+ *
+ * PreView mode not support(yet) 2016/6/2
+ * var model = 'https://api.projectoxford.ai/luis/v1/application/preview?id=a672fa00-adb4-4420-9f83-f6f674a1f438&subscription-key=2bc35bd5cc7f42e0839dd8400aafcd08' *
+ *
+ */
 const model = 'https://api.projectoxford.ai/luis/v1/application?id=a672fa00-adb4-4420-9f83-f6f674a1f438&subscription-key=2bc35bd5cc7f42e0839dd8400aafcd08'
-// PreView mode not support(yet) 2016/6/2
-// var model = 'https://api.projectoxford.ai/luis/v1/application/preview?id=a672fa00-adb4-4420-9f83-f6f674a1f438&subscription-key=2bc35bd5cc7f42e0839dd8400aafcd08'
-
 const luis = new BotBuilder.LuisDialog(model)
 .onDefault(IntentAction.Default)
 .on('None'      , IntentAction.None)
@@ -38,10 +44,15 @@ const luis = new BotBuilder.LuisDialog(model)
 .on('Greeting'  , IntentAction.Greeting)
 .on('error'     , e => log.error('Luis', e))
 
-/////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+/**
+ *
+ * Chatbot from M$
+ *
+ *
+ */
 const textBot = new BotBuilder.TextBot({minSendDelay: 0})
-.use(Middleware.commander)
-.use(Middleware.firstRun)
+// .use(Middleware.firstRun)
 .add('/', luis)
 .add('/firstrun', Waterfall.firstRun)
 .add('/getCity'  , Waterfall.getCity)
@@ -49,34 +60,175 @@ const textBot = new BotBuilder.TextBot({minSendDelay: 0})
 .add('/getNumber', Waterfall.getNumber)
 .on('error', e => log.error('TextBot', e))
 
+///////////////////////////////////////////////////////////////////////////////
+/**
+ *
+ * Mikey & other staff
+ *
+ *
+ */
+function mikeyBrain(talker, listener, utterance, room) {
+  return textBot.processMessage({
+    text: utterance
+    , from: {
+      channelId: 'wechat'
+      , address: talker
+    }
+  }) //, (err, reply) => wechatyCallback)
+}
+
+function mikeyMouth(talker, listener, utterance, room) {
+  return new Wechaty.Message()
+  .set('from'   , talker)
+  .set('to'     , listener)
+  .set('content', utterance)
+  .set('room'   , room)
+}
+
+// /** Information needed to route a message. */
+// export interface IChannelAccount {
+//     /** Display friendly name of the user. */
+//     name?: string;
+
+//     /** Channel Id that the channelAccount is to be communicated with (Example: GroupMe.) */
+//     channelId: string;
+
+//     /** Channel Address for the channelAccount (Example: @thermous.) */
+//     address: string;
+
+//     /** Id - global intercom id. */
+//     id?: string;
+
+//     /** Is this account id an bot? */
+//     isBot?: boolean;
+// }
+
+/** A communication message recieved from a User or sent out of band from a Bot. */
+// export interface IMessage {
+//     /** What kind of message is this. */
+//     type?: string;
+
+//     /** Bot.Connector Id for the message (always assigned by transport.) */
+//     id?: string;
+
+//     /** Bot.Connector ConverationId id for the conversation (always assigned by transport.) */
+//     conversationId?: string;
+
+//     /** Timestamp of when the message was created. */
+//     created?: string;
+
+//     /** (if translated) The OriginalText of the message. */
+//     sourceText?: string;
+
+//     /** (if translated) The language of the OriginalText of the message. */
+//     sourceLanguage?: string;
+
+//     /** The language that the Text is expressed in. */
+//     language?: string;
+
+//     /** The text of the message (this will be target language depending on flags and destination.)*/
+//     text?: string;
+
+//     /** Array of attachments that can be anything. */
+//     attachments?: IAttachment[];
+
+//     /** ChannelIdentity that sent the message. */
+//     from?: IChannelAccount;
+
+//     /** ChannelIdentity the message is sent to. */
+//     to?: IChannelAccount;
+
+//     /** Account to send replies to (for example, a group account that the message was part of.) */
+//     replyTo?: IChannelAccount;
+
+//     /** The message Id that this message is a reply to. */
+//     replyToMessageId?: string;
+
+//     /** List of ChannelAccounts in the conversation (NOTE: this is not for delivery means but for information.) */
+//     participants?: IChannelAccount[];
+
+//     /** Total participants in the conversation.  2 means 1:1 message. */
+//     totalParticipants?: number;
+
+//     /** Array of mentions from the channel context. */
+//     mentions?: IMention[];
+
+//     /** Place in user readable format: For example: "Starbucks, 140th Ave NE, Bellevue, WA" */
+//     place?: string;
+
+//     /** Channel Message Id. */
+//     channelMessageId?: string;
+
+//     /** Channel Conversation Id. */
+//     channelConversationId?: string;
+
+//     /** Channel specific properties.  For example: Email channel may pass the Subject field as a property. */
+//     channelData?: any;
+
+//     /** Location information (see https://dev.onedrive.com/facets/location_facet.htm) */
+//     location?: ILocation;
+
+//     /** Hashtags for the message. */
+//     hashtags?: string[];
+
+//     /** Required to modify messages when manually reading from a store. */
+//     eTag?: string;
+// }
+
+textBot.on('reply', function (reply) {
+  const from = reply.from.address
+  const to = reply.to.address
+  const text = reply.text
+
+  log.info('Luis', `textBot.on(reply), to ${to}:"${text}"`)
+  mikeyMouth(from, to, text, null)
+})
+
+const mikey = new Mikey({
+  brain: mikeyBrain
+  , mouth: mikeyMouth
+})
+
+const commander = new Commander()
+
 console.log(`
 Mike@Wechat Loading...
 `)
 
 const wechaty = new Wechaty({head: false})
 .on('scan', ({url, code}) => {
-  console.log(`Scan qrcode in url to login: ${code}\n${url}`)
+  console.log(`Scan QRCode from WeChat to login: ${code}\n${url}`)
 })
 .on('login'  , user => {
   user.ready()
-  .then(u => log.info('Bot', `bot login: ${user.toStringEx()}`))
+  .then(u => log.info('Bot', `bot login: ${user.name()}`))
 })
-.on('logout' , e => log.info('Bot', 'bot logout.'))
-.on('message', m => {
-  m.ready().then(() => {
-    log.verbose('Bot', 'recv: %s'  , m.toStringEx())
-    let reply = Commander(m)
-    if(reply) {
-      return wechaty.send(m.reply(reply))
-    } else if (!m.self() && isWechatyChannel(m)) {
-      log.info('Bot', 'Wechaty hear: %s', m)
-      const dialogMessage = wechatyMessage2TextBotReply(m)
-      return textBot.processMessage(dialogMessage)//, (err, reply) => wechatyCallback)
-    }
-  }).catch(e => {
-    log.error('Bot', 'error: %s', e)
-  })
-})
+.on('logout' , user => log.info('Bot', `bot logout: ${user.name()}`))
+
+wechaty.on('message', onWechatyMessage)
+
+function onWechatyMessage(m) {
+  const from = m.get('from')
+  const to = m.get('to')
+  const room = m.get('room')
+  const content = m.get('content')
+
+  if (commander.valid(from, to, content)) {
+    commander.do(content)
+    .then(reply => {
+      wechaty.send(m.reply(reply))
+    })
+    .catch(e => {
+      log.error('onWechatyMessage', e)
+      wechaty.send(m.reply(e))
+    })
+    return
+  }
+
+  if (needMikey(m)) {
+    mikey.hear(from, content, room)
+  }
+}
 
 wechaty.init()
 .catch(e => {
@@ -85,30 +237,30 @@ wechaty.init()
   process.exit(-1)
 })
 
-textBot.on('reply', function (reply) {
-  const c = Wechaty.Contact.load(reply.to.address)
-  c.ready()
-  .then(() => {
-    log.info('Luis', `event[reply] to ${c.name()}:"${reply.text}"`)
 
-    const m = textBotReply2WechatyMessage(reply)
-    // console.log(util.inspect(m))
-    wechaty.send(m)
-  })
-})
+function needMikey(message) {
+  log.silly('needMikey', 'start')
+  if (message.self()) {
+    log.silly('needMikey', 'mikey do not process self message(should not to)')
+    return false
+  }
 
-function isWechatyChannel(m) {
-  log.silly('Luis', 'isWechatyChannel()')
-  if (m.group()) {  // group message
-    const g = new Wechaty.Group.load(m.group())
-    // console.log(g)
-    // log.silly('Luis', 'group name %s', g.name())
-    if (/Wechaty/i.test(g.name())) {
+  const room = message.get('room')
+  const from = message.get('from')
+  if (room) {  // message in room
+    const roomName = Wechaty.Room
+    .load(room)
+    .get('name')
+    // log.silly('Mikey', 'group name %s', r.name())
+    if (/Wechaty/i.test(roomName)) {
       return true
     }
   } else {          // not group message
-    const f = Wechaty.Contact.load(m.from())
-    if (f.stranger()) {
+    const isStranger = Wechaty.Contact
+    .load(from)
+    .get('stranger')
+
+    if (isStranger) {
       // return true
     }
   }
@@ -125,26 +277,7 @@ function wechatyCallback(err, reply) {
   return wechaty.send(message)
 }
 
-function textBotReply2WechatyMessage(reply) {
-  const to = reply.to.address
-  const content = reply.text
-  // console.log(reply)
-// log.warn('Reply', 'to: %s', to)
 
-  return new Wechaty.Message()
-  .set('to', to)
-  .set('content', content)
-}
-
-function wechatyMessage2TextBotReply(m) {
-  return {
-    text: m.content()
-    , from: {
-      channelId: 'wechat'
-      , address: m.group() ? m.group() : m.from()
-    }
-  }
-}
 
 function simpleCli(textBot) {
   const bot = textBot

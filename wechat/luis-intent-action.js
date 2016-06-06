@@ -1,6 +1,7 @@
-const replies = require('./luis-replies')
 const log = require('npmlog')
 const util = require('util')
+
+const replies = require('./replies')
 
 const IntentAction = {
   /**
