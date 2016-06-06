@@ -19,6 +19,7 @@ var Parser = (function () {
   Parser.jsform = jsform
   Parser.intviu = intviu
   Parser.mikecrm = mikecrm
+  Parser.review = review
   
   // for testing
   Parser.mapTable = mapTable
@@ -58,7 +59,14 @@ var Parser = (function () {
     next()
   }
   
- 
+  function review(req, res, next) {
+    var bizplan = req.bizplan
+    
+    if (!jsform2Table(bizplan))        return req.pushError('jsForm2Table failed')
+    if (!jsformTable2Review(bizplan))  return req.pushError('jsFormTable2EvalBpn failed')
+    
+    next()
+  }
   
   ///////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////
@@ -277,6 +285,27 @@ var Parser = (function () {
     bizplan.setFromEmail    (interview.email)
     bizplan.setCompany      (interview.company)
     bizplan.setFounderMobile(interview.mobile)
+    
+    return true
+  }
+
+  function jsformTable2Review(bizplan) {
+    var review = {
+      name: '核心创始人（大股东或者CEO）姓名'
+      , mobile: '创始人手机号'
+      , email: '创始人邮箱'
+      , company: '项目名称（10字以内）'
+    }
+    
+    review = mapTable(review, bizplan.table)
+    
+    match = /mailto:([^@]+?@[^@]+?)['"]/.exec(review.email)
+    if (match) review.email = match[1]
+    
+    bizplan.setFromName     (review.name)
+    bizplan.setFromEmail    (review.email)
+    bizplan.setCompany      (review.company)
+    bizplan.setFounderMobile(review.mobile)
     
     return true
   }

@@ -39,7 +39,8 @@ var Ticketor = (function () {
 //  var ID_AGENT_ZIXIA = Agent.list({ email: 'zixia@zixia.net' })[0].getId()
 //  var ID_AGENT_MARY  = Agent.list({ email: 'mary@aka.cn'     })[0].getId()
   var ID_AGENT_CHEN  = Agent.list({ email: 'chen@plugandplaytechcenter.com'     })[0].getId()
-  var ID_GROUP_PNP = 5000254541
+  var ID_GROUP_PNP    = 5000254541
+  var ID_GROUP_FOLLOW = 5000238074
   
   var Ticketor = function () {
   }
@@ -58,7 +59,8 @@ var Ticketor = (function () {
   
   Ticketor.assignMary = function (req, res, next) { req.ticket.assign(ID_AGENT_MARY); next() }
   Ticketor.assignChen = function (req, res, next) { req.ticket.assign(ID_AGENT_CHEN); next() }  
-  Ticketor.assignPnp = function (req, res, next) { req.ticket.setGroup(ID_GROUP_PNP); next() }
+  Ticketor.groupPnp    = function (req, res, next) { req.ticket.setGroup(ID_GROUP_PNP); next() }
+  Ticketor.groupFollow = function (req, res, next) { req.ticket.setGroup(ID_GROUP_FOLLOW); next() }
   
   Ticketor.noteCinderella = noteCinderella
   

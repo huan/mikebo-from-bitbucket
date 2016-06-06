@@ -2,9 +2,9 @@ function MailBot() {
   'use strict'  
 
   // DAYSPAN: how many day(s) looks back by search 
-  var DAYSPAN = 7
+  var DAYSPAN = 67
   // LIMIT: how many message(s) processed by run once
-  var LIMIT   = 7
+  var LIMIT   = 3
   
   if ((typeof log)==='undefined') eval ('var log = new GasLog()')
 
@@ -57,6 +57,7 @@ function MailBot() {
     , doIntviuChannel       // 6. 橙云面试视频(IntViu)
   
     , doPlugAndPlayChannel  // 7. Plug and Play BP
+    , doReviewChannel       // 8. PA项目评估
   ]
   
   /**
@@ -560,7 +561,7 @@ function MailBot() {
       
       , Ticketor.tryToPair
       , Ticketor.noteOrCreate
-      , Ticketor.assignPnp
+      , Ticketor.groupPnp
       , Ticketor.assignChen
       
       , Mailer.labelAdd_ToBeDeleted
@@ -570,4 +571,51 @@ function MailBot() {
     return pnpChannel.done(Tracker.logOnEnd)
     
   }
+  
+  /******************************************************
+  *
+  *
+  *
+  * 8. PA项目评估（JsForm）
+  *
+  *
+  *
+  */
+  function doReviewChannel() {
+    
+    var reviewChannel = new GmailChannel({
+      name: 'review'
+      , keywords: [
+        'PreAngel项目评估表'
+      ]
+      , labels: ['inbox', '-trash']
+      , dayspan: DAYSPAN
+      , query: 'to:bp AND from:表单大师'
+      , doneLabel: 'OutOfReviewChannel'
+      , limit: LIMIT
+      , res: {}
+    })
+    
+    Logger.log(reviewChannel.getQueryString())
+     
+    reviewChannel.use(
+      Tracker.logOnStart
+
+      , Mailer.labelAdd_BizPlan
+      
+      , Bizplaner.init
+      , Parser.review
+      
+      , Ticketor.tryToPair
+      , Ticketor.noteOrCreate
+      , Ticketor.groupFollow
+      , Ticketor.closeIfNew
+      
+      , Mailer.labelAdd_ToBeDeleted
+      , Mailer.moveToArchive
+    )
+    
+    return reviewChannel.done(Tracker.logOnEnd)
+    
+  }   
 }
