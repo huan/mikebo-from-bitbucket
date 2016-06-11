@@ -34,6 +34,7 @@ const IntentAction = {
 
       next({bizplan: true})
     }
+    /*
     // BizPlan - 2
     , function BizPlanStep2(session, results, next) {
       session.beginDialog('/getCity', { prompt: "你在哪个城市？" })
@@ -77,6 +78,7 @@ const IntentAction = {
       }
       next()
     }
+    */
     /**
      * session.replaceDialog('/menu');
      * session.beginDialog('/getNumber', { prompt: "你们团队多少人？"})
@@ -95,7 +97,7 @@ const IntentAction = {
     const dialogData = session.dialogData
 
     if (!userData.greeting) {
-      session.send(replies('greeting') + ' %s', session.userData.name)
+      session.send(replies('greeting'))
       // console.log(session)
       const address = session.message.from.address
 

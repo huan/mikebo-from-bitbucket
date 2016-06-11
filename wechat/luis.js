@@ -5,11 +5,6 @@
  */
 const util = require('util')
 const co  = require('co')
-const log = require('npmlog')
-log.level = 'verbose'
-log.level = 'silly'
-
-const EventEmitter2 = require('eventemitter2')
 
 const IntentAction = require('./luis-intent-action')
 const Middleware = require('./luis-middleware')
@@ -18,7 +13,9 @@ const Waterfall = require('./luis-waterfall')
 const Commander = require('./commander')
 const Mikey = require('./mikey')
 
-const {Wechaty, BotBuilder} = require('./requires')
+const {Wechaty, BotBuilder, log} = require('./requires')
+
+console.log('\nMike@Wechat Loading...\n')
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
@@ -53,95 +50,82 @@ const textBot = new BotBuilder.TextBot({minSendDelay: 0})
 /**
  * Wechaty
  */
-const commander = new Commander()
-
-console.log('\nMike@Wechat Loading...\n')
-
-const wechaty = new Wechaty({head: false})
-.on('scan', ({url, code}) => {
-  console.log(`Scan QR Code: ${code}\n${url}`)
+const wechaty = new Wechaty({
+  session: 'luis.wechaty.json'
 })
-.on('login'  , user => {
-  user.ready()
-  .then(u => log.info('Bot', `bot login: ${user.name()}`))
-})
-.on('logout' , user => log.info('Bot', `bot logout: ${user.name()}`))
+.on('message', m => onWechatyMessage.call(wechaty, m))
 
-wechaty.on('message', m => m.ready().then(onWechatyMessage))
+const commander = wechaty.commander = new Commander({wechaty: wechaty})
 
+// need provide this == wechaty inside function
 function onWechatyMessage(m) {
   const from = m.get('from')
   const to = m.get('to')
   const content = m.get('content')
   const room = m.get('room')
 
-  if (commander.valid(from, to, content, room)) {
-    commander.do(content)
-    .then(reply => {
-      wechaty.send(m.reply(reply))
+  if (this.commander.valid(from, to, content, room)) {
+    this.commander.order(from, to, content, room)
+    .then(output => {
+      // still send to `filehelper`
+      m.set('content', output)
+      wechaty.send(m)
     })
     .catch(e => {
       log.error('onWechatyMessage', e)
-      wechaty.send(m.reply(e))
+      this.reply(m, e)
     })
     return
   }
 
+  if (m.self()) {
+    log.silly('onWechatyMessage', 'skip self message')
+    return
+  }
+
+  if (room) {
+    Wechaty.Room.load(room).dump()
+  } else {
+    Wechaty.Contact.load(from).dump()
+  }
+
+  m.dump()
+
   if (needMikey(m)) {
-    mikey.hear(from, to, content, room)
+    mikey.ear(from, to, content, room)
+  } else {
+    log.verbose('onWechatyMessage', 'recv: %s', m.toStringEx())
   }
 }
 
 function needMikey(message) {
-  log.silly('needMikey', 'start')
-  if (message.self()) {
-    log.silly('needMikey', 'mikey do not process self message(should not to)')
-    return false
-  }
+  // log.silly('needMikey', 'start')
 
-  const room = message.get('room')
-  const from = message.get('from')
+  const room = message.room() ? Wechaty.Room.load(message.room()) : null
+  const from = Wechaty.Contact.load(message.from())
+  const stranger = from.get('stranger')
+
   if (room) {  // message in room
-    const roomName = Wechaty.Room
-    .load(room)
-    .get('name')
-
-    if (/Wechaty/i.test(roomName)) {
-      log.silly('Mikey', 'need mikey in group name %s', roomName)
+    if (/Wechaty/i.test(room.name())) {
+      log.silly('Mikey', 'need mikey in room %s', room.name())
       return true
     }
-     log.silly('Mikey', 'no need mikey in group name %s', roomName)
-  } else {          // not group message
-    const isStranger = Wechaty.Contact
-    .load(from)
-    .get('stranger')
-
-    if (isStranger) {
-      log.silly('Mikey', 'its a stranger msg')
+     log.silly('Mikey', 'no need mikey in room %s', room.name())
+  } else {     // message from individal
+    if (stranger) {
+      log.silly('Mikey', 'its a stranger msg from %s', from.name())
       // return true
     } else {
-      log.silly('Mikey', 'its a friend msg')
+      log.silly('Mikey', 'its a friend msg from %s', from.name())
     }
   }
-  log.silly('Mikey', 'no need mikey')
+  // log.silly('Mikey', 'no need mikey')
   return false
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * Mikey
- */
-
-const mikey = new Mikey({
-  brain: textBot
-  // brain: brain('echo')
-  // , mouth: mouth('wechaty')
-  , mouth: 'cli'
-})
-
-///////////////////////////////////////////////////////////////////////////////
-/**
- * Starter
+ * Mikey Starter
  */
 function startCli() {
   const readline = require('readline')
@@ -153,25 +137,73 @@ function startCli() {
   rl.on('line', (line) => {
     const msg = line.trim()
     if (msg) {
-      mikey.hear('cli', 'wechaty', msg, 'c9')
+      mikey.ear('cli', 'mikey', msg, 'c9')
     }
     rl.prompt()
   }).on('close', () => {
     console.log('Have a great day!')
     process.exit(0)
   })
+
+  return new Mikey({
+    brain: textBot
+    // , mouth: wechaty
+    // brain: brain('echo')
+    , mouth: 'cli'
+  })
 }
 
 function startWechaty() {
+  wechaty
+  .on('scan', ({url, code}) => { console.log(`Scan QR Code to login: [${code}]\n${url}`) })
+  .on('login'  , user => {
+    log.info('Bot', `bot login: ${user.name()}`)
+    user.dump()
+    // user.dumpRaw()
+  })
+  .on('logout' , user => log.info('Bot', `bot logout: ${user.name()}`))
+
   wechaty.init()
   .catch(e => {
     log.error('Bot', 'init() fail:' + e)
     wechaty.quit()
-    process.exit(-1)
+    .then(() => process.exit(-1))
+  })
+
+  return new Mikey({
+    brain: textBot
+    , mouth: wechaty
+    // brain: brain('echo')
+    // , mouth: 'cli'
+  })
+}
+
+function startCommander() {
+  const readline = require('readline')
+  const rl = readline.createInterface(process.stdin, process.stdout)
+
+  rl.setPrompt('Wechaty> ')
+  rl.prompt()
+
+  rl.on('line', (line) => {
+    const msg = line.trim()
+    if (msg) {
+      mikey.ear('cli', 'mikey', msg, 'c9')
+    }
+    rl.prompt()
+  }).on('close', () => {
+    console.log('Have a great day!')
+    process.exit(0)
+  })
+
+  return new Mikey({
+    brain: commander
+    , mouth: 'cli'
   })
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// startCli()
-startWechaty()
+// const mikey =  startCli()
+const mikey = startWechaty()
+// const mikey = startCommander()

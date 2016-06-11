@@ -9,7 +9,7 @@ class Mikey extends EventEmitter {
     this.mouth  = mouth(options.mouth) // function (talker, listener, utterance, room)
 
     if (typeof this.brain!=='function' || typeof this.mouth!=='function') {
-      throw Error('brain & mouth need to be a function')
+      throw Error('brain & mouth both need to be function')
     }
 
     this.on('say', (...args) => {
@@ -17,9 +17,9 @@ class Mikey extends EventEmitter {
     })
   }
 
-  hear(talker, listener, utterance, room) {
-    if (!talker || !listener || !utterance) { throw Error('Mikey.hear() must contains talker/listener/utterance') }
-    log.verbose('Mikey', 'hear %s -> %s : "%s" @ [%s]', talker, listener, utterance, room)
+  ear(talker, listener, utterance, room) {
+    if (!talker || !listener || !utterance) { throw Error('Mikey.ear() must contains talker/listener/utterance') }
+    log.verbose('Mikey', 'ear() %s -> %s : "%s" @ [%s]', talker, listener, utterance, room)
 
     return this.brain(talker, listener, utterance, room)
   }
@@ -31,6 +31,7 @@ function brain(instance) {
   const brains = {
     TextBot: microsoft  // textbot
     , String: echo      // 'echo'
+    , Commander: commander // commander
   }
 
   if (!brains[type]) {
@@ -40,19 +41,19 @@ function brain(instance) {
 
   //////////////////////////
   function microsoft(talker, listener, utterance, room) {
-    log.info('brain.microsoft', `${talker} -> ${listener} :"${utterance}" @[${room}]`)
+    log.verbose('Mikey', `brain(microsoft).processMessage: ${talker} -> ${listener} :"${utterance}" @[${room}]`)
 
     if (!this.initMicrosoft) {
-      log.verbose('brain.microsoft', 'init event[reply] callback')
+      log.verbose('Mikey', 'brain(microsoft) initing event[reply] callback')
       instance.on('reply', reply => {
-        console.log(reply)
+        // console.log(reply)
         const utterance = reply.text
         const talker    = reply.from.address
 
         const listener  = reply.to.address
         const room      = reply.to.channelId
 
-        log.info('brain.microsoft', `textBot.on(reply): ${talker} -> ${listener} :"${utterance}" @[${room}]`)
+        log.verbose('Mikey', `brain(microsoft).on(reply): ${talker} -> ${listener} :"${utterance}" @[${room}]`)
         this.emit('say', talker, listener, utterance, room)
       })
       this.initMicrosoft = true
@@ -72,9 +73,22 @@ function brain(instance) {
   }
 
   function echo(talker, listener, utterance, room) {
-    log.info('brain.echo', `${talker} -> ${listener} :"${utterance}" @[${room}]`)
+    log.verbose('Mikey', `brain(echo) ${talker} -> ${listener} :"${utterance}" @[${room}]`)
     this.emit('say', talker, listener, utterance, room)
   }
+
+  function commander(talker, listener, utterance, room) {
+    listener = 'filehelper'
+    log.verbose('Mikey', `brain(commander) ${talker} -> ${listener} :"${utterance}" @[${room}]`)
+    instance.order(talker, listener, utterance, room)
+    .then(output => {
+      this.emit('say', listener, talker, output, room)
+    })
+    .catch(e => {
+      log.verbose('Mikey', 'brain(commander) rejected: %s', e)
+    })
+  }
+
 }
 
 function mouth(instance) {
@@ -97,12 +111,12 @@ function mouth(instance) {
     .set('content', utterance)
     .set('room'   , room)
 
-    log.info('mikeyMsWechaty', `mouth(): ${talker} -> ${listener} :"${utterance}" @[${room}]`)
+    log.info('Mikey', `mouth(wechaty): ${talker} -> ${listener} :"${utterance}" @[${room}]`)
     return instance.send(m)
   }
 
   function cli(talker, listener, utterance, room) {
-    console.log(`${talker} -> ${listener} :"${utterance}" @[${room}]`)
+    console.log(`Mikey.mouth(cli): ${talker} -> ${listener} :"${utterance}" @[${room}]`)
   }
 }
 

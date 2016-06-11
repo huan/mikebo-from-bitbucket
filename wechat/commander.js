@@ -1,19 +1,22 @@
-const log = require('npmlog')
 const util = require('util')
 const exec = require('child_process').exec
+
+const {log} = require('./requires')
 
 /**
  *
  *
  */
 class Commander {
-  constuctor() {
+  constructor(options) {
+    options = options = {}
+    this.wechaty = options.wechaty
     this.init()
   }
 
   init() {
     // each command should be a function that return promise
-    this.commands == {
+    this.commands = {
       help:     function() {
         return Promise.resolve(`
           help - this message
@@ -26,10 +29,10 @@ class Commander {
         return Promise.resolve('dong')
       }
       , set:    function(key, value) {
-        return Promise.resolve(false)
+        return Promise.resolve(`${key} = ${value}`)
       }
       , status: function() {
-        const status = util.inspect(process.memoryUsage()) + '\n'
+        let status = util.inspect(process.memoryUsage()) + '\n'
 
         return new Promise((resolve, reject) => {
           exec("ps -eo rss,args | grep phantomjs | grep -v grep | awk '{print $1}'", (error, stdout, stderr) => {
@@ -41,21 +44,25 @@ class Commander {
           })
         })
       }
+      , logout: function() {
+        return this.wechaty.logout()
+      }
+      , quit: function() {
+        return this.wechaty.quit()
+      }
+      , exit: function() {
+        process.exit(-1)
+      }
     }
   }
 
-  do(text) {
+  order(from, to, text, room) {
     log.silly('Commander', 'start')
-    // const from    = message.get('from')
-    // const to      = message.get('to')
-    // const content = message.get('content')
-
     if (!this.valid(from, to, text)) {
-      throw new Error('Commander is not on duty for "%s"', text)
+      return Promise.reject('Commander is not on duty for "' + text + '"')
     }
 
     log.verbose('Commander', `CMD %s found. To Be Executed...`, text)
-
     let [cmd, ...args] = text.split(/\s+/)
     cmd = cmd.replace(/^\//, '') // strip the first '/' char for cmd
     log.verbose('Commander', `CMD %s(%s)`, cmd, args.join(','))
@@ -66,7 +73,9 @@ class Commander {
     return Promise.reject('Commander: unknown command: ' + cmd)
   }
 
-  valid(from, to, text) {
+  valid(from, to, text, room) {
+    log.verbose('Commander', 'valid(%s, %s, %s, %s)', from, to, text, room)
+
     if (!/^\//.test(text)) { // 1、必须以 "/" 开头；
       return false
     } else if (!/^filehelper$/i.test(to)) { // 2、必须发给 filehelper
