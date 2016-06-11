@@ -1,11 +1,16 @@
 const replies = {
-  mailBizplan: '好，请发送商业计划书到 zixia@pre-angel.com ，同时抄送 bp@pre-angel.com 。我们所有的合伙人都可以收到。'
-  , greeting: [
+  mailBizPlan: '好，请发送商业计划书到 zixia@pre-angel.com ，同时抄送 bp@pre-angel.com 。我们所有的合伙人都可以收到。'
+  , replyBizPlan: '好的，谢谢。等我用电脑上处理商业计划书时回复你。'
+  , greetingChat: [
     'hi'
     , 'hello'
     , '你好'
     , '好'
     , '在'
+  ]
+  , greetingHoliday: [
+    '假期好'
+    , '节日好'
   ]
   , fakeChat: [
     '哦'
@@ -19,6 +24,10 @@ const replies = {
   , unknown: [
     '什么？'
     , '没懂。'
+  ]
+  , welcome: [
+    '客气啦'
+    , ':)'
   ]
 }
 module.exports = function(textkey) {

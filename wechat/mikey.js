@@ -12,7 +12,7 @@ class Mikey extends EventEmitter {
       throw Error('brain & mouth both need to be function')
     }
 
-    this.on('say', (...args) => {
+    this.on('speak', (...args) => {
       this.mouth.apply(this, args)
     })
   }
@@ -29,9 +29,10 @@ function brain(instance) {
   const type = instance.constructor.name
 
   const brains = {
-    TextBot: microsoft  // textbot
-    , String: echo      // 'echo'
-    , Commander: commander // commander
+    TextBot:              microsoft   // textbot
+    , TextBotHearNoEvil:  microsoft   // textbot
+    , Commander:          commander   // commander
+    , String:             echo        // 'echo'
   }
 
   if (!brains[type]) {
@@ -54,7 +55,7 @@ function brain(instance) {
         const room      = reply.to.channelId
 
         log.verbose('Mikey', `brain(microsoft).on(reply): ${talker} -> ${listener} :"${utterance}" @[${room}]`)
-        this.emit('say', talker, listener, utterance, room)
+        this.emit('speak', talker, listener, utterance, room)
       })
       this.initMicrosoft = true
     }
@@ -74,7 +75,7 @@ function brain(instance) {
 
   function echo(talker, listener, utterance, room) {
     log.verbose('Mikey', `brain(echo) ${talker} -> ${listener} :"${utterance}" @[${room}]`)
-    this.emit('say', talker, listener, utterance, room)
+    this.emit('speak', talker, listener, utterance, room)
   }
 
   function commander(talker, listener, utterance, room) {
@@ -82,7 +83,7 @@ function brain(instance) {
     log.verbose('Mikey', `brain(commander) ${talker} -> ${listener} :"${utterance}" @[${room}]`)
     instance.order(talker, listener, utterance, room)
     .then(output => {
-      this.emit('say', listener, talker, output, room)
+      this.emit('speak', listener, talker, output, room)
     })
     .catch(e => {
       log.verbose('Mikey', 'brain(commander) rejected: %s', e)
@@ -95,8 +96,9 @@ function mouth(instance) {
   const type = instance.constructor.name
 
   const mouths = {
-    Wechaty: wechaty  // wechaty
-    , String: cli     // 'cli'
+    Wechaty:              wechaty   // wechaty
+    , WechatySpeakNoEvil: wechaty   // wechaty
+    , String:             cli       // 'cli'
   }
   if (mouths[type]) {
     return mouths[type]

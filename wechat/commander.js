@@ -2,6 +2,7 @@ const util = require('util')
 const exec = require('child_process').exec
 
 const {log} = require('./requires')
+const wechaty = require('./wechaty')
 
 /**
  *
@@ -10,7 +11,6 @@ const {log} = require('./requires')
 class Commander {
   constructor(options) {
     options = options = {}
-    this.wechaty = options.wechaty
     this.init()
   }
 
@@ -45,10 +45,10 @@ class Commander {
         })
       }
       , logout: function() {
-        return this.wechaty.logout()
+        return wechaty.logout()
       }
       , quit: function() {
-        return this.wechaty.quit()
+        return wechaty.quit()
       }
       , exit: function() {
         process.exit(-1)
@@ -74,7 +74,7 @@ class Commander {
   }
 
   valid(from, to, text, room) {
-    log.verbose('Commander', 'valid(%s, %s, %s, %s)', from, to, text, room)
+    log.silly('Commander', 'valid(%s, %s, %s, %s)', from, to, text, room)
 
     if (!/^\//.test(text)) { // 1、必须以 "/" 开头；
       return false
