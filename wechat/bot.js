@@ -90,6 +90,10 @@ function needMikey(message) {
   const from = Wechaty.Contact.load(message.from())
   const stranger = from.get('stranger')
 
+  if (message.type() == Message.Type.APP) {
+    log.verbose('Mikey', 'mikey skip {APP} message')
+    return false
+  }
   if (room) {  // message in room
     if (/Wechaty/i.test(room.name())) {
       log.verbose('Mikey', 'need mikey in wechaty room')
@@ -139,10 +143,10 @@ class TextBotHearNoEvil extends EventEmitter {
 
     // TODO hear no evil
     const from = Wechaty.Contact.load(talker)
-    // if (from.get('star')) {
-    //   evil = true
-    //   log.verbose('Bot', 'HearNoEvil skip a star contact')
-    // }
+    if (from.get('star')) {
+      evil = true
+      log.verbose('Bot', 'HearNoEvil skip a star contact')
+    }
 
     if (evil) {
       log.verbose('Bot', 'Hear No Evil!')

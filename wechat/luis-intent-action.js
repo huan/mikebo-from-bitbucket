@@ -73,11 +73,11 @@ function greetingChat (session, args) {
   const dialogData = session.dialogData
 
   if (!userData.GreetingChat) {
+    userData.GreetingChat = true
+
     session.send(replies('greetingChat'))
     // console.log(session)
     const address = session.message.from.address
-
-    userData.GreetingChat = true
   }
 }
 function greetingHoliday(session, args) {

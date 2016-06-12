@@ -30,7 +30,7 @@ class Commander {
       , ding:     function() { return wechaty.ding() }
       , logout:   function() { return wechaty.logout() }
       , quit:     function() { return wechaty.quit() }
-      , exit:     function() { process.exit(-1) }
+      , exit:     function() { process.exit(0) }
       , status:   status
       , dump:     dump
       , search:   search
@@ -133,7 +133,7 @@ function dump(nickOrAlias) {
     var regex = new RegExp(keyword, 'i')
     return Object.keys(allContacts).filter(function(UserName) {
       var contact = allContacts[UserName]
-      var desc = contact.NickName + ' ' + contact.Alias
+      var desc = contact.NickName + ' ' + contact.Alias + ' ' + contact.UserName
       return regex.test(desc)
     })
     .map(function(UserName) {
@@ -200,6 +200,7 @@ function status() {
 }
 
 function send(to, msg) {
+
   return wechaty.puppet.bridge.send(to ,msg)
   .then(() => {
     return 'msg sent to ' + to
