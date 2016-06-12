@@ -1,7 +1,7 @@
 const util = require('util')
 const exec = require('child_process').exec
 
-const {log} = require('./requires')
+const {Wechaty, log} = require('./requires')
 const wechaty = require('./wechaty')
 
 /**
@@ -25,34 +25,17 @@ class Commander {
           set -
         `)
       }
-      , ding:     function() {
-        return Promise.resolve('dong')
-      }
-      , set:    function(key, value) {
-        return Promise.resolve(`${key} = ${value}`)
-      }
-      , status: function() {
-        let status = util.inspect(process.memoryUsage()) + '\n'
+      , set:      function(key, value) { return Promise.resolve(`${key} = ${value}`) }
 
-        return new Promise((resolve, reject) => {
-          exec("ps -eo rss,args | grep phantomjs | grep -v grep | awk '{print $1}'", (error, stdout, stderr) => {
-            if (error) {
-              return reject(error)
-            }
-            status += 'phantomjs memory size: ' + Math.floor(stdout/1024) + 'MB'
-            resolve(status)
-          })
-        })
-      }
-      , logout: function() {
-        return wechaty.logout()
-      }
-      , quit: function() {
-        return wechaty.quit()
-      }
-      , exit: function() {
-        process.exit(-1)
-      }
+      , ding:     function() { return wechaty.ding() }
+      , logout:   function() { return wechaty.logout() }
+      , quit:     function() { return wechaty.quit() }
+      , exit:     function() { process.exit(-1) }
+      , status:   status
+      , dump:     dump
+      , search:   search
+      , send:     send
+      , t: test
     }
   }
 
@@ -68,9 +51,12 @@ class Commander {
     log.verbose('Commander', `CMD %s(%s)`, cmd, args.join(','))
 
     if (cmd in this.commands) {
+      log.verbose('Commander', 'cmd[%s] existing', cmd)
       return this.commands[cmd].apply(this, args)
+    } else {
+      log.verbose('Commander', 'cmd[%s] not existing(yet)', cmd)
+      return Promise.reject(new Error('Commander: unknown command: ' + cmd))
     }
-    return Promise.reject('Commander: unknown command: ' + cmd)
   }
 
   valid(from, to, text, room) {
@@ -83,6 +69,141 @@ class Commander {
     }
     return true
   }
+}
+
+
+/*
+
+
+Object.keys(window._chatContent)
+.filter(function (k) { return window._chatContent[k].length > 0 })
+.map(function (k) { return window._chatContent[k].map(function (v) {return v.MMDigestTime}) })
+*/
+function search(keyword) {
+  if (!wechaty.puppet || !wechaty.puppet.bridge) {
+    return Promise.reject('wechaty not ready')
+  }
+
+  return wechaty.puppet.bridge.execute(bsFunc, keyword)
+  .then(list => {
+    return list.map(c => c.NickName + '(' + c.Alias + ')' + c.UserName)
+    .reduce((v1, v2) => v1 + '\r\n' + v2, '')
+  })
+
+  function bsFunc(keyword) { // browser side function
+    if (typeof Wechaty === 'undefined') {
+      return 'Wechaty not ready, please retry later.'
+    }
+    Wechaty.log('bsFunc(' + keyword + ')')
+    var allContacts = Wechaty.glue.contactFactory.getAllContacts()
+    var regex = new RegExp(keyword, 'i')
+    return Object.keys(allContacts).filter(function(UserName) {
+      var contact = allContacts[UserName]
+      var desc = Object.keys(contact)
+      .map(function (k) { return contact[k] })
+      .reduce(function (v1, v2) { return v1 + ' ' + v2 }, '')
+      return regex.test(desc)
+    })
+    .map(function(UserName) {
+      var c = allContacts[UserName]
+      return {NickName: c.NickName, Alias: c.Alias, UserName: c.UserName}
+    })
+  }
+}
+function dump(nickOrAlias) {
+  if (!wechaty.puppet || !wechaty.puppet.bridge) {
+    return Promise.reject('wechaty not ready')
+  }
+
+  return wechaty.puppet.bridge.execute(bsFunc, nickOrAlias)
+  .then(list => {
+    if (list.length > 3) {
+      list = list.slice(0,3)
+    }
+    return list.map(contact => Object.keys(contact).map(k => k + ':' + contact[k]).join('\r\n'))
+    .reduce((v1, v2) => v1 + '\r\n\r\n##############\r\n\r\n' + v2, '')
+  })
+
+  function bsFunc(keyword) { // browser side function
+    if (typeof Wechaty === 'undefined') {
+      return 'Wechaty not ready, please retry later.'
+    }
+    Wechaty.log('bsFunc(' + keyword + ')')
+    var allContacts = Wechaty.glue.contactFactory.getAllContacts()
+    var regex = new RegExp(keyword, 'i')
+    return Object.keys(allContacts).filter(function(UserName) {
+      var contact = allContacts[UserName]
+      var desc = contact.NickName + ' ' + contact.Alias
+      return regex.test(desc)
+    })
+    .map(function(UserName) {
+      var contact = allContacts[UserName]
+      var c = {}
+      Object.keys(contact).forEach(function (k) {
+        if (typeof contact[k] === 'function') {
+          return
+        } else if (!contact[k]) {
+          return
+        } else {
+          c[k] = contact[k]
+        }
+      })
+      return c
+    })
+  }
+}
+
+function test(value) {
+  if (!wechaty.puppet || !wechaty.puppet.bridge) {
+    return Promise.reject('wechaty not ready')
+  }
+
+  return wechaty.puppet.bridge.execute(bsFunc, value)
+  .then(list => {
+    return list.map(contact => Object.keys(contact).map(k => k + ':' + contact[k]).join(', '))
+    .reduce((v1, v2) => v1 + '\r\n' + v2, '')
+  })
+
+  function bsFunc(keyword) { // browser side function
+    if (typeof Wechaty === 'undefined') {
+      return 'Wechaty not ready, please retry later.'
+    }
+    Wechaty.log('bsFunc(' + keyword + ')')
+    var allContacts = Wechaty.glue.contactFactory.getAllContacts()
+    var regex = new RegExp(keyword, 'i')
+    return Object.keys(allContacts).filter(function(UserName) {
+      var contact = allContacts[UserName]
+      var desc = Object.keys(contact)
+      .map(function (k) { return contact[k] })
+      .reduce(function (v1, v2) { return v1 + ' ' + v2 }, '')
+      return regex.test(desc)
+    })
+    .map(function(UserName) {
+      var c = allContacts[UserName]
+      return {NickName: c.NickName, Alias: c.Alias}
+    })
+  }
+}
+
+function status() {
+  let status = util.inspect(process.memoryUsage()) + '\n'
+
+  return new Promise((resolve, reject) => {
+    exec("ps -eo rss,args | grep phantomjs | grep -v grep | awk '{print $1}'", (error, stdout, stderr) => {
+      if (error) {
+        return reject(error)
+      }
+      status += 'phantomjs memory size: ' + Math.floor(stdout/1024) + 'MB'
+      resolve(status)
+    })
+  })
+}
+
+function send(to, msg) {
+  return wechaty.puppet.bridge.send(to ,msg)
+  .then(() => {
+    return 'msg sent to ' + to
+  })
 }
 
 module.exports = Commander.default = Commander.Commander = Commander

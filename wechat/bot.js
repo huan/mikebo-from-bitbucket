@@ -26,10 +26,14 @@ function onWechatyMessage(m, options) {
   const content = m.get('content')
   const room = m.get('room')
 
+  const fromContact = Wechaty.Contact.load(from)
+  const toContact = Wechaty.Contact.load(to)
+  const roomRoom = Wechaty.Room.load(room)
+
   const mikey     = options.mikey
   const commander = options.commander
 
-  console.log(m.toString())
+  console.log('<' + fromContact.toString() + (room ? '@'+roomRoom.toString() : '') + '>: ' + m.toString())
 
   /**
    * 1. commander middleware
@@ -71,9 +75,12 @@ function onWechatyMessage(m, options) {
   /**
    * 4. message process middleware
    */
-  if (needMikey(m)) {
-    mikey.ear(from, to, content, room)
-  }
+  m.ready().then(() => { // re-ready to double check ready status
+    if (needMikey(m)) {
+      mikey.ear(from, to, m.toString(), room)
+    }
+ })
+
 }
 
 function needMikey(message) {
@@ -92,7 +99,8 @@ function needMikey(message) {
         , room.get('members').length)
       return true
     }
-     log.silly('Mikey', 'no need mikey in this room')
+     log.silly('Mikey', 'no need mikey in this %d people room'
+      , room.get('members').length)
   } else {     // message from individal
     if (stranger) {
       log.verbose('Mikey', 'need mikey for stranger msg')
@@ -162,19 +170,28 @@ class WechatySpeakNoEvil {
 
   send(message) {
     let evil = true
+    let reason = 'Speak No Evil'
 
     // TODO: Speak No Evil
-    const from = Wechaty.Contact.load(message.from())
-    const room = Wechaty.Room.load(message.room())
+    const from  = Wechaty.Contact.load(message.from())
+    const to    = Wechaty.Contact.load(message.from())
+    const room  = Wechaty.Room.load(message.room())
 
-    if (from.stranger())                      { evil = false }
-    if (room && /wechaty/i.test(room.name())) { evil = false }
+    if (to.stranger()){
+      evil = false
+      reason = 'from stranger'
+    }
+    if (room && /wechaty/i.test(room.name())) {
+      evil = false
+      reason = 'in wechaty room'
+    }
 
     if (evil) {
       log.verbose('Bot', 'Speak No Evil!')
       return
     }
 
+    log.verbose('Bot', 'Speak because %s', reason)
     this.wechaty.send(message)
   }
 }
@@ -228,9 +245,55 @@ function startCli(brain) {
   })
 }
 
+function startSocket(brain, options) {
+
+  const name = options.name || 'Socket Server'
+  const port = options.port || 28788
+
+  const net       = require('net')
+  const readline  = require('readline')
+
+  var server = net.createServer(function(socket) {
+    log.verbose('Bot', `startSocket ${name} got new client`)
+  	socket.write(`${name}\r\n`)
+  // 	socket.pipe(socket);
+    const rl = readline.createInterface(socket, socket)
+
+    const mikey = new Mikey({
+      brain: brain
+      , mouth: socket
+    })
+
+    rl.setPrompt('Wechaty> ')
+    rl.prompt()
+
+    rl.on('line', (line) => {
+      const msg = line.trim()
+      if (msg) {
+        mikey.ear('cli', 'mikey', msg, 'c9')
+      }
+      rl.prompt()
+    }).on('close', () => {
+      // socket.write('Have a great day!')
+      log.verbose('Bot', `${name} close event received`)
+    })
+  })
+
+  server.listen(port, '0.0.0.0', err => {
+    if (err) {
+      log.error('Bot', 'listen err: %s', err.message)
+      return
+    }
+    log.info('Bot', `Socket ${name} listening on port %d`, port)
+  })
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 
-// const mikey =startCli(textbot)
-const mikey = startWechaty()
-// const mikey = startCli(new Commander())
+// startCli(textbot)
+startWechaty()
+startSocket(new Commander() , { port: 8082, name: 'commander' })
+startSocket(textbot         , { port: 8081, name: 'chatter' })
+
+console.log('started')

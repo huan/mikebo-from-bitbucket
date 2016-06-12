@@ -87,6 +87,7 @@ function brain(instance) {
     })
     .catch(e => {
       log.verbose('Mikey', 'brain(commander) rejected: %s', e)
+      this.emit('speak', listener, talker, e.message, room)
     })
   }
 
@@ -94,10 +95,12 @@ function brain(instance) {
 
 function mouth(instance) {
   const type = instance.constructor.name
+  log.verbose('Mikey', 'mouse(%s)', type)
 
   const mouths = {
     Wechaty:              wechaty   // wechaty
     , WechatySpeakNoEvil: wechaty   // wechaty
+    , Socket:             socket    // socket
     , String:             cli       // 'cli'
   }
   if (mouths[type]) {
@@ -119,6 +122,9 @@ function mouth(instance) {
 
   function cli(talker, listener, utterance, room) {
     console.log(`Mikey.mouth(cli): ${talker} -> ${listener} :"${utterance}" @[${room}]`)
+  }
+  function socket(talker, listener, utterance, room) {
+    instance.write(`Mikey.mouth(socket): ${talker} -> ${listener} :\r\n"${utterance}" @[${room}]\r\n`)
   }
 }
 

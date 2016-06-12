@@ -10,6 +10,7 @@
     "apiai": "^2.0.5",
     "botbuilder": "^1.0.0",
     "node-google-apps-script": "1.1.4",
+    "qrcode-terminal": "^0.10.0",
     "wechaty": ""
   },
   "devDependencies": {},
