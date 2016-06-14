@@ -14,29 +14,19 @@ const Starter   = require('./starter')
 const {Wechaty, log} = require('./requires')
 
 const luis    = require('./luis')
-const wechaty = require('./wechaty')
 
 const textbot = require('./textbot')
 
 console.log('\nMike@Wechat Loading...\n')
 
 
+// Starter.telnet(new Commander() , { port: 8082, name: 'Telnet Commander' })
 
+Starter.wechaty(textbot)
 
-
-
-///////////////////////////////////////////////////////////////////////////////
-
-// startTelnet(new Commander() , { port: 8082, name: 'Telnet Commander' })
-
-
-Starter.wechaty.call(wechaty, {
-  brain:     textbot
-  , mouth:   wechaty
-})
+Starter.socket(textbot         , { port: 8081, name: 'Socket Chatter' })
+Starter.socket(new Commander() , { port: 8082, name: 'Socket Commander' })
 
 Starter.cli(textbot, {name: 'Cli'})
-Starter.socket(new Commander() , { port: 8082, name: 'Socket Commander' })
-Starter.socket(textbot         , { port: 8081, name: 'Socket Chatter' })
 
 console.log('started')

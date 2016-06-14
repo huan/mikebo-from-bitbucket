@@ -1,5 +1,4 @@
 const Mikey       = require('./mikey')
-const Commander   = require('./commander')
 const {log}       = require('./requires')
 
 const Starter = {
@@ -9,26 +8,22 @@ const Starter = {
   , telnet: startTelnet
 }
 
-function startWechaty(options) {
+function startWechaty(brain) {
+  const wechaty = require('./wechaty')
+
   const mikey = new Mikey({
-    brain:    options.brain
-    , mouth:  options.mouth
+    brain:    brain
+    , mouth:  wechaty
   })
 
-  const commander = new Commander()
-
-  this
-  .on('message', m => {
-    this.onWechatyMessage(m, {
-      mikey: mikey
-      , commander: commander
-    })
-  })
+  wechaty
+  .on('message', m => wechaty.onWechatyMessage(m, mikey))
   .init()
   .catch(e => {
     log.error('Bot', 'init() fail:' + e)
-    options.wechaty.quit()
+    wechaty.quit()
     .then(() => process.exit(-1))
+    .catch(e => console.error('startWechaty() wechaty init exception: ' + e.message))
   })
 }
 

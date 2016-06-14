@@ -3,15 +3,18 @@ const exec = require('child_process').exec
 
 // const EventEmitter = require('events')
 const {Wechaty, log} = require('./requires')
-const wechaty = require('./wechaty')
 
 /**
  *
  *
  */
 class Commander {
-  constructor(options) {
-    options = options = {}
+  constructor(wechaty) {
+    if (!wechaty) {
+      log.warn('Commander', 'no wechaty')
+    }
+
+    this.wechaty = wechaty
     this.init()
   }
 
@@ -29,18 +32,34 @@ class Commander {
         return Promise.resolve(`
           help - this message
           ding - expect to got dong
-          status - get wechaty current status
+          status - get this.wechaty current status
           set -
         `)
       }
       , set:      function(key, value) { return Promise.resolve(`${key} = ${value}`) }
 
-      , ding:     function() { return wechaty.ding() }
-      , logout:   function() { return wechaty.logout() }
+      , ding:     function() {
+        if (!this.wechaty) {
+          return Promise.reject(new Error('no wechaty'))
+        }
+        return this.wechaty.ding()
+      }
+      , logout:   function() {
+        if (!this.wechaty) {
+          return Promise.reject(new Error('no wechaty'))
+        }
+        return this.wechaty.logout()
+      }
+      , login: function() {
+        if (!this.wechaty) {
+          return Promise.reject(new Error('no wechaty'))
+        }
+        return this.wechaty.init()
+      }
       , exit:     function() { process.exit(0) }
       , restart:  function() {
-        if (wechaty.puppet && wechaty.puppet.browser) {
-          return Promise.resolve(wechaty.puppet.browser.dead('restart required by Commander'))
+        if (this.wechaty.puppet && this.wechaty.puppet.browser) {
+          return Promise.resolve(this.wechaty.puppet.browser.dead('restart required by Commander'))
         } else {
           return Promise.reject(new Error('cant restart coz no browser'))
         }
@@ -97,11 +116,11 @@ Object.keys(window._chatContent)
 .map(function (k) { return window._chatContent[k].map(function (v) {return v.MMDigestTime}) })
 */
 function search(keyword) {
-  if (!wechaty.puppet || !wechaty.puppet.bridge) {
-    return Promise.reject('wechaty not ready')
+  if (!this.wechaty.puppet || !this.wechaty.puppet.bridge) {
+    return Promise.reject('this.wechaty not ready')
   }
 
-  return wechaty.puppet.bridge.execute(bsFunc, keyword)
+  return this.wechaty.puppet.bridge.execute(bsFunc, keyword)
   .then(list => {
     return list.map(c => c.NickName + '(' + c.Alias + ')' + c.UserName)
     .reduce((v1, v2) => v1 + '\r\n' + v2, '')
@@ -128,11 +147,11 @@ function search(keyword) {
   }
 }
 function dump(nickOrAlias) {
-  if (!wechaty.puppet || !wechaty.puppet.bridge) {
-    return Promise.reject('wechaty not ready')
+  if (!this.wechaty.puppet || !this.wechaty.puppet.bridge) {
+    return Promise.reject('this.wechaty not ready')
   }
 
-  return wechaty.puppet.bridge.execute(bsFunc, nickOrAlias)
+  return this.wechaty.puppet.bridge.execute(bsFunc, nickOrAlias)
   .then(list => {
     if (list.length > 3) {
       list = list.slice(0,3)
@@ -171,11 +190,11 @@ function dump(nickOrAlias) {
 }
 
 function test(value) {
-  if (!wechaty.puppet || !wechaty.puppet.bridge) {
-    return Promise.reject('wechaty not ready')
+  if (!this.wechaty.puppet || !this.wechaty.puppet.bridge) {
+    return Promise.reject('this.wechaty not ready')
   }
 
-  return wechaty.puppet.bridge.execute(bsFunc, value)
+  return this.wechaty.puppet.bridge.execute(bsFunc, value)
   .then(list => {
     return list.map(contact => Object.keys(contact).map(k => k + ':' + contact[k]).join(', '))
     .reduce((v1, v2) => v1 + '\r\n' + v2, '')
@@ -218,7 +237,7 @@ function status() {
 
 function send(to, msg) {
 
-  return wechaty.puppet.bridge.send(to ,msg)
+  return this.wechaty.puppet.bridge.send(to ,msg)
   .then(() => {
     return 'msg sent to ' + to
   })
@@ -241,10 +260,10 @@ function beval(...scripts) {
   const script = 'return ' + scripts.join(' ') // add `return` for webdriver
   log.verbose('Commander', 'beval() browser eval: "%s"', script)
 
-  if (!wechaty || !wechaty.puppet || !wechaty.puppet.bridge) {
+  if (!this.wechaty || !this.wechaty.puppet || !this.wechaty.puppet.bridge) {
     log.warn('Commander', 'beval() bridge not exist')
     return Promise.reject(new Error('bridge not exist'))
   }
-  return wechaty.puppet.bridge.execute(script)
+  return this.wechaty.puppet.bridge.execute(script)
 }
 module.exports = Commander.default = Commander.Commander = Commander

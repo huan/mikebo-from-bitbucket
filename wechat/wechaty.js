@@ -1,4 +1,5 @@
 const {Wechaty, log} = require('./requires')
+const Commander   = require('./commander')
 
 ///////////////////////////////////////////////////////////////////////////////
 /**
@@ -27,21 +28,26 @@ wechaty
 })
 .on('logout' , user => log.info('Bot', `bot logout: ${user.name()}`))
 
+const commander = new Commander(wechaty)
+
 // must bind this to wechaty
-function onWechatyMessage(m, options) {
+function onWechatyMessage(m, mikey) {
+
   const from = m.get('from')
   const to = m.get('to')
-  const content = m.get('content')
+  const content = m.toString()
   const room = m.get('room')
 
   const fromContact = Wechaty.Contact.load(from)
-  const toContact = Wechaty.Contact.load(to)
-  const roomRoom = Wechaty.Room.load(room)
-
-  const mikey     = options.mikey
-  const commander = options.commander
+  const toContact   = Wechaty.Contact.load(to)
+  const roomRoom    = Wechaty.Room.load(room)
 
   console.log('<' + fromContact.toString() + (room ? '@'+roomRoom.toString() : '') + '>: ' + m.toStringDigest())
+
+  if (m.type() != 'TEXT') {
+    log.verbose('Bot', 'skip non-TEXT message')
+    return
+  }
 
   if (/^wechaty$/i.test(m.get('content'))) {
     this.reply(m, '哈哈，感谢你关注我的Wechaty。目前还在建设中，欢迎前往 github 逛逛源代码先： https://github.com/zixia/wechaty ~')
@@ -102,10 +108,6 @@ function needMikey(message) {
   const from = Wechaty.Contact.load(message.from())
   const stranger = from.get('stranger')
 
-  if (message.type() == Wechaty.Message.Type.APP) {
-    log.verbose('Mikey', 'mikey skip {APP} message')
-    return false
-  }
   if (room) {  // message in room
     if (/Wechaty/i.test(room.name())) {
       log.verbose('Mikey', 'need mikey in wechaty room')

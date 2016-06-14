@@ -12,7 +12,10 @@ class Mikey extends EventEmitter {
       throw Error('brain & mouth both need to be function')
     }
 
+    log.info('Mikey', `borned with brain(${this.brain.brainType}) and mouth(${this.mouth.mouthType})`)
+
     this.on('speak', (...args) => {
+      log.verbose('Mikey', `event[speak] try to speak by mouth ${this.mouth.mouthType}`)
       this.mouth.apply(this, args)
     })
   }
@@ -21,36 +24,38 @@ class Mikey extends EventEmitter {
     if (!talker || !listener || !utterance) { throw Error('Mikey.ear() must contains talker/listener/utterance') }
     log.verbose('Mikey', 'ear() %s -> %s : "%s" @ [%s]', talker, listener, utterance, room)
 
+    log.verbose('Mikey', `use brain ${this.brain.brainType} to hear`)
     return this.brain(talker, listener, utterance, room)
   }
 }
 
 function brain(instance) {
   const type = instance.constructor.name
-  log.verbose('Mikey', 'brain(%s)', type)
+  log.verbose('Mikey', 'making brain(%s)', type)
 
   /**
    * Hear less...
    */
   if (type==='TextBot') {
     instance = new TextBotHearNoEvil(instance)
-    log.warn('Mikey', 'WechatyHearNoEvil inited')
+    log.verbose('Mikey', 'WechatyHearNoEvil inited')
   }
 
   const brains = {
-    TextBot:              microsoft   // textbot
-    , TextBotHearNoEvil:  microsoft   // textbot
-    , Commander:          commander   // commander
-    , String:             echo        // 'echo'
+    TextBot:              textbotWraper     // textbot
+    , TextBotHearNoEvil:  textbotWraper     // textbot
+    , Commander:          commanderWraper   // commander
+    , String:             echoWraper        // 'echo'
   }
 
   if (!brains[type]) {
     throw new Error('unsupport brain type: ' + type)
   }
+  brains[type].brainType = type
   return brains[type]
 
   //////////////////////////
-  function microsoft(talker, listener, utterance, room) {
+  function textbotWraper(talker, listener, utterance, room) {
     log.verbose('Mikey', `brain(microsoft).processMessage: ${talker} -> ${listener} :"${utterance}" @[${room}]`)
 
     if (!this.initMicrosoft) {
@@ -91,12 +96,12 @@ function brain(instance) {
     return Promise.resolve()
   }
 
-  function echo(talker, listener, utterance, room) {
+  function echoWraper(talker, listener, utterance, room) {
     log.verbose('Mikey', `brain(echo) ${talker} -> ${listener} :"${utterance}" @[${room}]`)
     this.emit('speak', talker, listener, utterance, room)
   }
 
-  function commander(talker, listener, utterance, room) {
+  function commanderWraper(talker, listener, utterance, room) {
     listener = 'filehelper'
     log.verbose('Mikey', `brain(commander) ${talker} -> ${listener} :"${utterance}" @[${room}]`)
     return instance.order(talker, listener, utterance, room)
@@ -113,45 +118,46 @@ function brain(instance) {
 
 function mouth(instance) {
   const type = instance.constructor.name
-  log.verbose('Mikey', 'mouse(%s)', type)
+  log.verbose('Mikey', 'making mouth(%s)', type)
 
   /**
    * Speak less...
    */
   if (type==='Wechaty') {
     instance = new WechatySpeakNoEvil(instance)
-    log.warn('Mikey', 'WechatySpeakNoEvil inited')
+    log.verbose('Mikey', 'WechatySpeakNoEvil added to wechaty')
   }
 
 
   const mouths = {
-    Wechaty:              wechaty   // wechaty
-    , WechatySpeakNoEvil: wechaty   // wechaty
-    , Socket:             socket    // socket
-    , TelnetStream:       socket    //
-    , String:             cli       // 'cli'
+    Wechaty:              wechatyWraper   // wechaty
+    , WechatySpeakNoEvil: wechatyWraper   // wechaty
+    , Socket:             socketWraper    // socket
+    , TelnetStream:       socketWraper    //
+    , String:             cliWraper       // 'cli'
   }
   if (mouths[type]) {
+    mouths[type].mouthType = type
     return mouths[type]
   } else {
     throw new Error('unsupport mouth type: ' + type)
   }
 
-  function wechaty(talker, listener, utterance, room) {
+  function wechatyWraper(talker, listener, utterance, room) {
     const m = new Wechaty.Message()
     .set('from'   , talker)
     .set('to'     , listener)
     .set('content', utterance)
     .set('room'   , room)
 
-    log.info('Mikey', `mouth(wechaty): ${talker} -> ${listener} :"${utterance}" @[${room}]`)
+    log.verbose('Mikey', `mouth(wechaty): ${talker} -> ${listener} :"${utterance}" @[${room}]`)
     return instance.send(m)
   }
 
-  function cli(talker, listener, utterance, room) {
+  function cliWraper(talker, listener, utterance, room) {
     console.log(`Mikey.mouth(cli): ${talker} -> ${listener} :"${utterance}" @[${room}]`)
   }
-  function socket(talker, listener, utterance, room) {
+  function socketWraper(talker, listener, utterance, room) {
     instance.write(`Mikey.mouth(socket): ${talker} -> ${listener} :\r\n"${utterance}" @[${room}]\r\n`)
   }
 }
@@ -211,11 +217,13 @@ class WechatySpeakNoEvil {
   }
 
   send(message) {
+    log.verbose('Mikey', 'WechatSpeakNoEvil.send()')
+
     let evil = true
     let reason = 'Speak No Evil'
 
     // TODO: Speak No Evil
-    const from  = Wechaty.Contact.load(message.from())
+    // const from  = Wechaty.Contact.load(message.from())
     const to    = Wechaty.Contact.load(message.from())
     const room  = Wechaty.Room.load(message.room())
 
@@ -233,7 +241,7 @@ class WechatySpeakNoEvil {
       return
     }
 
-    log.verbose('Bot', 'Speak because %s', reason)
+    log.warn('WechatSpeakNoEvil', 'Speak because %s', reason)
     this.wechaty.send(message)
   }
 }
