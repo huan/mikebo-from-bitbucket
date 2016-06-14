@@ -27,6 +27,15 @@ class Mikey extends EventEmitter {
 
 function brain(instance) {
   const type = instance.constructor.name
+  log.verbose('Mikey', 'brain(%s)', type)
+
+  /**
+   * Hear less...
+   */
+  if (type==='TextBot') {
+    instance = new TextBotHearNoEvil(instance)
+    log.warn('Mikey', 'WechatyHearNoEvil inited')
+  }
 
   const brains = {
     TextBot:              microsoft   // textbot
@@ -68,7 +77,7 @@ function brain(instance) {
       utterance = String(utterance).substr(0,300)
     }
 
-    return instance.processMessage({
+    instance.processMessage({
       text: utterance
       , from: {
         channelId: room
@@ -79,6 +88,7 @@ function brain(instance) {
         , address: listener
       }
     }) //, (err, reply) => wechatyCallback)
+    return Promise.resolve()
   }
 
   function echo(talker, listener, utterance, room) {
@@ -105,10 +115,20 @@ function mouth(instance) {
   const type = instance.constructor.name
   log.verbose('Mikey', 'mouse(%s)', type)
 
+  /**
+   * Speak less...
+   */
+  if (type==='Wechaty') {
+    instance = new WechatySpeakNoEvil(instance)
+    log.warn('Mikey', 'WechatySpeakNoEvil inited')
+  }
+
+
   const mouths = {
     Wechaty:              wechaty   // wechaty
     , WechatySpeakNoEvil: wechaty   // wechaty
     , Socket:             socket    // socket
+    , TelnetStream:       socket    //
     , String:             cli       // 'cli'
   }
   if (mouths[type]) {
@@ -136,4 +156,85 @@ function mouth(instance) {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/**
+ * Mikey Starter
+ */
+
+class TextBotHearNoEvil extends EventEmitter {
+  constructor(textbot) {
+    super()
+    if (!textbot) throw new Error('no textbot')
+    this.textbot = textbot
+
+    textbot.on('reply', r => { this.emit('reply', r) } )
+  }
+
+  processMessage(message) {
+    const utterance = message.text
+    const talker    = message.from.address
+
+    const listener  = message.to.address
+    const room      = message.to.channelId
+
+    let evil = false
+
+    // TODO hear no evil
+    const from = Wechaty.Contact.load(talker)
+    if (!room && from.get('star')) {
+      evil = true
+      log.verbose('Bot', 'HearNoEvil skip a star contact')
+    }
+
+    if (evil) {
+      log.verbose('Bot', 'Hear No Evil!')
+      return
+    }
+
+    return this.textbot.processMessage({
+      text: utterance
+      , from: {
+        channelId: room
+        , address: talker
+      }
+      , to: {
+        channelId: room
+        , address: listener
+      }
+    }) //, (err, reply) => wechatyCallback)
+  }
+}
+
+class WechatySpeakNoEvil {
+  constructor(wechaty) {
+    this.wechaty = wechaty
+  }
+
+  send(message) {
+    let evil = true
+    let reason = 'Speak No Evil'
+
+    // TODO: Speak No Evil
+    const from  = Wechaty.Contact.load(message.from())
+    const to    = Wechaty.Contact.load(message.from())
+    const room  = Wechaty.Room.load(message.room())
+
+    if (to.stranger()){
+      evil = false
+      reason = 'from stranger'
+    }
+    if (room && /wechaty/i.test(room.name())) {
+      evil = false
+      reason = 'in wechaty room'
+    }
+
+    if (evil) {
+      log.verbose('Bot', 'Speak No Evil!')
+      return
+    }
+
+    log.verbose('Bot', 'Speak because %s', reason)
+    this.wechaty.send(message)
+  }
+}
 module.exports = Mikey.default = Mikey.Mikey = Mikey

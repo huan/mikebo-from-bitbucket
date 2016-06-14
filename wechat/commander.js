@@ -37,9 +37,15 @@ class Commander {
 
       , ding:     function() { return wechaty.ding() }
       , logout:   function() { return wechaty.logout() }
-      , quit:     function() { return this.emit('quit') }
       , exit:     function() { process.exit(0) }
-      , restart:  function() { return Promise.resolve(wechaty.puppet.browser.dead('restart required by Commander')) }
+      , restart:  function() {
+        if (wechaty.puppet && wechaty.puppet.browser) {
+          return Promise.resolve(wechaty.puppet.browser.dead('restart required by Commander'))
+        } else {
+          return Promise.reject(new Error('cant restart coz no browser'))
+        }
+      }
+
       , status:   status
       , dump:     dump
       , search:   search

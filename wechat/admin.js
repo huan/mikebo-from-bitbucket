@@ -11,14 +11,14 @@ sock.on('connect', function () {
 })
 
 sock.on('close', function done () {
-  process.stdin.setRawMode(false)
-  process.stdin.pause()
+  process.stdin.isTTY && process.stdin.setRawMode(false)
+  // process.stdin.pause()
   sock.removeListener('close', done)
 })
 
 process.stdin.on('end', function () {
-  sock.destroy()
-  console.log()
+  sock.end()
+  console.log('stdin end')
 })
 
 process.stdin.on('data', function (b) {
@@ -29,12 +29,14 @@ process.stdin.on('data', function (b) {
 
 //////////////////////
 
-process.stdin.resume();//so the program will not close instantly
-
+// process.stdin.resume();//so the program will not close instantly
+/*
 function exitHandler(options, err) {
+  console.log('exitHandler()')
   process.stdin.setRawMode(false)
   if (options.cleanup) console.log('clean');
   if (err) console.log(err.stack);
+  console.log('exit')
   if (options.exit) process.exit();
 }
 
@@ -46,3 +48,4 @@ process.on('SIGINT', exitHandler.bind(null, {exit:true}));
 
 //catches uncaught exceptions
 process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
+*/
