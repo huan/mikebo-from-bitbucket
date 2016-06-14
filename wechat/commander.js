@@ -1,6 +1,7 @@
 const util = require('util')
 const exec = require('child_process').exec
 
+// const EventEmitter = require('events')
 const {Wechaty, log} = require('./requires')
 const wechaty = require('./wechaty')
 
@@ -12,6 +13,13 @@ class Commander {
   constructor(options) {
     options = options = {}
     this.init()
+  }
+
+  completer(line) {
+    var completions = Object.keys(this.commands).map(c =>　'.' + c)
+    var hits = completions.filter((c) => { return c.indexOf(line) == 0 })
+    // show all completions if none found
+    return [hits.length ? hits : completions, line]
   }
 
   init() {
@@ -29,12 +37,15 @@ class Commander {
 
       , ding:     function() { return wechaty.ding() }
       , logout:   function() { return wechaty.logout() }
-      , quit:     function() { return wechaty.quit() }
+      , quit:     function() { return this.emit('quit') }
       , exit:     function() { process.exit(0) }
+      , restart:  function() { return Promise.resolve(wechaty.puppet.browser.dead('restart required by Commander')) }
       , status:   status
       , dump:     dump
       , search:   search
       , send:     send
+      , beval:    beval // Browser Eval
+      , seval:    seval // Server Eval
       , t: test
     }
   }
@@ -47,7 +58,7 @@ class Commander {
 
     log.verbose('Commander', `CMD %s found. To Be Executed...`, text)
     let [cmd, ...args] = text.split(/\s+/)
-    cmd = cmd.replace(/^\//, '') // strip the first '/' char for cmd
+    cmd = cmd.replace(/^\./, '') // strip the first '.' char for cmd
     log.verbose('Commander', `CMD %s(%s)`, cmd, args.join(','))
 
     if (cmd in this.commands) {
@@ -62,12 +73,12 @@ class Commander {
   valid(from, to, text, room) {
     log.silly('Commander', 'valid(%s, %s, %s, %s)', from, to, text, room)
 
-    if (!/^\//.test(text)) { // 1、必须以 "/" 开头；
-      return false
-    } else if (!/^filehelper$/i.test(to)) { // 2、必须发给 filehelper
-      return false
+    if (text[0]=='.') {       // 1、必须以 "." 开头；
+      if (to=='filehelper') { // 2、必须发给 filehelper
+        return true
+      }
     }
-    return true
+    return false
   }
 }
 
@@ -207,4 +218,27 @@ function send(to, msg) {
   })
 }
 
+function seval(... scripts) {
+  const script = scripts.join(' ')
+  log.verbose('Commander', 'server eval: "%s"', script)
+
+  let result
+  try {
+    result = eval(script)
+  } catch (e) {
+    result = e.message
+  }
+  return Promise.resolve(result)
+}
+
+function beval(...scripts) {
+  const script = 'return ' + scripts.join(' ') // add `return` for webdriver
+  log.verbose('Commander', 'beval() browser eval: "%s"', script)
+
+  if (!wechaty || !wechaty.puppet || !wechaty.puppet.bridge) {
+    log.warn('Commander', 'beval() bridge not exist')
+    return Promise.reject(new Error('bridge not exist'))
+  }
+  return wechaty.puppet.bridge.execute(script)
+}
 module.exports = Commander.default = Commander.Commander = Commander

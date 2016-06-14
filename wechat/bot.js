@@ -33,8 +33,12 @@ function onWechatyMessage(m, options) {
   const mikey     = options.mikey
   const commander = options.commander
 
-  console.log('<' + fromContact.toString() + (room ? '@'+roomRoom.toString() : '') + '>: ' + m.toString())
+  console.log('<' + fromContact.toString() + (room ? '@'+roomRoom.toString() : '') + '>: ' + m.toStringDigest())
 
+  if (/^wechaty$/i.test(m.get('content'))) {
+    wechaty.reply(m, '哈哈，感谢你关注我的Wechaty。目前还在建设中，欢迎前往 github 逛逛源代码先： https://github.com/zixia/wechaty ~')
+    return
+  }
   /**
    * 1. commander middleware
    */
@@ -90,7 +94,7 @@ function needMikey(message) {
   const from = Wechaty.Contact.load(message.from())
   const stranger = from.get('stranger')
 
-  if (message.type() == Message.Type.APP) {
+  if (message.type() == Wechaty.Message.Type.APP) {
     log.verbose('Mikey', 'mikey skip {APP} message')
     return false
   }
@@ -143,7 +147,7 @@ class TextBotHearNoEvil extends EventEmitter {
 
     // TODO hear no evil
     const from = Wechaty.Contact.load(talker)
-    if (from.get('star')) {
+    if (!room && from.get('star')) {
       evil = true
       log.verbose('Bot', 'HearNoEvil skip a star contact')
     }
@@ -234,7 +238,7 @@ function startCli(brain) {
   const readline = require('readline')
   const rl = readline.createInterface(process.stdin, process.stdout)
 
-  rl.setPrompt('Wechaty> ')
+  rl.setPrompt(brain.constructor.name + '> ')
   rl.prompt()
 
   rl.on('line', (line) => {
@@ -259,28 +263,60 @@ function startSocket(brain, options) {
 
   var server = net.createServer(function(socket) {
     log.verbose('Bot', `startSocket ${name} got new client`)
-  	socket.write(`${name}\r\n`)
-  // 	socket.pipe(socket);
-    const rl = readline.createInterface(socket, socket)
+
+/*
+    const repl = require('repl')
+    var r = repl.start({
+        prompt: 'socket '+socket.remoteAddress+':'+socket.remotePort+'> '
+      , input: socket
+      , output: socket
+      , terminal: true
+      , useGlobal: false
+    })
+    r.on('exit', function () {
+      socket.end()
+    })
+    r.context.socket = socket
+*/
+
+    socket
+  	.on('error', e => { log.warn('Bot', 'socket client error: %s', e.message) })
+  	.write(`${name}\r\n`)
+
+    const rl = readline.createInterface({
+      input: socket
+      , output: socket
+      , terminal: true
+      , historySize: 100
+      , completer: brain.completer ? brain.completer.bind(brain) : undefined
+    })
+
+    rl.setPrompt(brain.constructor.name + '> ')
+    rl.prompt()
+
+    rl.on('line', (line) => {
+      const msg = line.trim()
+      if (msg==='.quit') {
+        socket.end('Server Disconnected.\n')
+        return
+      }
+      if (msg) {
+        mikey.ear('cli', 'mikey', msg, 'c9')
+        .then(() => setTimeout(rl.prompt.bind(rl), 300))
+        .then(() => rl.prompt())
+      } else {
+        rl.prompt()
+      }
+    }).on('close', () => {
+      // socket.write('Have a great day!')
+      log.verbose('Bot', `${name} close event received`)
+    })
 
     const mikey = new Mikey({
       brain: brain
       , mouth: socket
     })
 
-    rl.setPrompt('Wechaty> ')
-    rl.prompt()
-
-    rl.on('line', (line) => {
-      const msg = line.trim()
-      if (msg) {
-        mikey.ear('cli', 'mikey', msg, 'c9')
-      }
-      rl.prompt()
-    }).on('close', () => {
-      // socket.write('Have a great day!')
-      log.verbose('Bot', `${name} close event received`)
-    })
   })
 
   server.listen(port, '0.0.0.0', err => {
@@ -295,7 +331,7 @@ function startSocket(brain, options) {
 ///////////////////////////////////////////////////////////////////////////////
 
 
-// startCli(textbot)
+startCli(textbot)
 startWechaty()
 startSocket(new Commander() , { port: 8082, name: 'commander' })
 startSocket(textbot         , { port: 8081, name: 'chatter' })

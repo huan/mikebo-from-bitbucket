@@ -60,6 +60,14 @@ function brain(instance) {
       this.initMicrosoft = true
     }
 
+    /*
+     * Note that sentences longer than 500 characters will result in an error message. The sentences that LUIS receives are automatically logged for future use. The most recent 100K utterances are retained and available for future use.
+     * https://www.luis.ai/Help#PublishingModel
+     */
+    if (utterance.length > 300) {
+      utterance = String(utterance).substr(0,300)
+    }
+
     return instance.processMessage({
       text: utterance
       , from: {
@@ -81,7 +89,7 @@ function brain(instance) {
   function commander(talker, listener, utterance, room) {
     listener = 'filehelper'
     log.verbose('Mikey', `brain(commander) ${talker} -> ${listener} :"${utterance}" @[${room}]`)
-    instance.order(talker, listener, utterance, room)
+    return instance.order(talker, listener, utterance, room)
     .then(output => {
       this.emit('speak', listener, talker, output, room)
     })
