@@ -1,6 +1,5 @@
 const EventEmitter = require('events')
-const log = require('npmlog')
-const {Wechaty} = require('./requires')
+const {Wechaty, log} = require('./requires')
 
 class Mikey extends EventEmitter {
   constructor(options) {
@@ -77,9 +76,13 @@ function brain(instance) {
     /*
      * Note that sentences longer than 500 characters will result in an error message. The sentences that LUIS receives are automatically logged for future use. The most recent 100K utterances are retained and available for future use.
      * https://www.luis.ai/Help#PublishingModel
+     * https://github.com/Microsoft/BotBuilder/issues/476
      */
-    if (utterance.length > 300) {
-      utterance = String(utterance).substr(0,300)
+    let byteSize = Buffer(utterance).length
+
+    while (byteSize > 500) {
+      utterance = utterance.substr(0, Math.floor(utterance.length * 500 / byteSize))
+      byteSize = Buffer(utterance).length
     }
 
     instance.processMessage({
@@ -104,7 +107,13 @@ function brain(instance) {
   function commanderWraper(talker, listener, utterance, room) {
     listener = 'filehelper'
     log.verbose('Mikey', `brain(commander) ${talker} -> ${listener} :"${utterance}" @[${room}]`)
-    return instance.order(talker, listener, utterance, room)
+
+    const {cmd, args} = instance.valid(talker, listener, utterance, room)
+    if (!cmd) {
+      return Promise.reject('no such command: ' + utterance)
+    }
+
+    return instance.execute(cmd, args)
     .then(output => {
       this.emit('speak', listener, talker, output, room)
     })
@@ -224,12 +233,12 @@ class WechatySpeakNoEvil {
 
     // TODO: Speak No Evil
     // const from  = Wechaty.Contact.load(message.from())
-    const to    = Wechaty.Contact.load(message.from())
+    const to    = Wechaty.Contact.load(message.to())
     const room  = Wechaty.Room.load(message.room())
 
     if (to.stranger()){
       evil = false
-      reason = 'from stranger'
+      reason = 'to stranger'
     }
     if (room && /wechaty/i.test(room.name())) {
       evil = false

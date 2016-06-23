@@ -12,21 +12,22 @@ const wechaty = new Wechaty({
 
 wechaty
 .on('scan', ({url, code}) => {
-  console.log(`Scan QR Code to login: [${code}]\n${url}`)
-
   if (!/201|200/.test(code)) {
     let loginUrl = url.replace(/\/qrcode\//, '/l/')
     require('qrcode-terminal').generate(loginUrl)
-  } else {
-
   }
+  console.log(`${url}\n[${code}] Scan QR Code above to login`)
 })
-.on('login'  , user => {
+.on('login', user => {
   log.info('Bot', `bot login: ${user.name()}`)
-  user.dump()
+  // user.dump()
   // user.dumpRaw()
 })
-.on('logout' , user => log.info('Bot', `bot logout: ${user.name()}`))
+.on('logout', user => log.info('Bot', `bot logout: ${user.name()}`))
+.on('error', e => {
+  console.log('############# on error event ####################')
+  log.error('Bot', 'bot exception: %s', e)
+})
 
 const commander = new Commander(wechaty)
 
@@ -42,22 +43,47 @@ function onWechatyMessage(m, mikey) {
   const toContact   = Wechaty.Contact.load(to)
   const roomRoom    = Wechaty.Room.load(room)
 
-  console.log('<' + fromContact.toString() + (room ? '@'+roomRoom.toString() : '') + '>: ' + m.toStringDigest())
+  /**
+   * Print message to console for reading
+   */
+  console.log((room ? '['+roomRoom.name()+']' : '')
+    + '<'+fromContact.name()+'>'
+    + ':' + m.toStringDigest()
+    )
 
-  if (m.type() != 'TEXT') {
-    log.verbose('Bot', 'skip non-TEXT message')
-    return
-  }
-
+  /**
+   *
+   * some action I can make sure... about...
+   *
+   */
   if (/^wechaty$/i.test(m.get('content'))) {
     this.reply(m, '哈哈，感谢你关注我的Wechaty。目前还在建设中，欢迎前往 github 逛逛源代码先： https://github.com/zixia/wechaty ~')
     return
+  } else if (m.type() === Wechaty.Message.Type.SYS && /just added you to his[\s\/]*her contacts list/i.test(m.get('content'))) {
+    // just added you to his / her contacts list
+    // <秋之林>:{SYS}秋之林 just added you to his/her contacts list. Send a message to him/her now!
+    if (fromContact.stranger()) {
+      setTimeout(() => {
+        this.reply(m, '谢谢你加我，我是投资人中最会飞的程序员。你可以做一下自我介绍吗？:)')
+      }, 60000) // 60s
+      return
+    }
   }
+
+  /**
+   * Skip non-TEXT message for processing
+   */
+  if (m.type() !== Wechaty.Message.Type.TEXT) {
+    log.verbose('Bot', 'onWechatyMessage() skip non-TEXT message')
+    return
+  }
+
   /**
    * 1. commander middleware
    */
-  if (commander.valid(from, to, content, room)) {
-    commander.order(from, to, content, room)
+  const {cmd, args} = commander.valid(from, to, content, room)
+  if (cmd) {
+    commander.execute(cmd, args)
     .then(output => {
       // still send to `filehelper`
       m.set('content', output)
@@ -73,7 +99,7 @@ function onWechatyMessage(m, mikey) {
   /**
    * 2. skip self middleware
    */
-  if (m.self()) {
+  if (this.self(m)) {
     log.silly('onWechatyMessage', 'skip self message')
     return
   }
@@ -134,4 +160,7 @@ function needMikey(message) {
 
 wechaty.onWechatyMessage = onWechatyMessage
 
-module.exports = wechaty
+module.exports = {
+  wechaty: wechaty
+  , commander: commander
+}

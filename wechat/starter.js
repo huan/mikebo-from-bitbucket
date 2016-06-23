@@ -1,5 +1,6 @@
 const Mikey       = require('./mikey')
 const {log}       = require('./requires')
+const {wechaty} = require('./wechaty')
 
 const Starter = {
   wechaty: startWechaty
@@ -9,8 +10,6 @@ const Starter = {
 }
 
 function startWechaty(brain) {
-  const wechaty = require('./wechaty')
-
   const mikey = new Mikey({
     brain:    brain
     , mouth:  wechaty

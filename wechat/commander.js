@@ -30,10 +30,9 @@ class Commander {
     this.commands = {
       help:     function() {
         return Promise.resolve(`
-          help - this message
-          ding - expect to got dong
-          status - get this.wechaty current status
-          set -
+Wechaty Commander(TAB for auto-complete)
+commands start with a dot(.)
+use tab to auto-complete commands
         `)
       }
       , set:      function(key, value) { return Promise.resolve(`${key} = ${value}`) }
@@ -75,19 +74,10 @@ class Commander {
     }
   }
 
-  order(from, to, text, room) {
-    log.silly('Commander', 'start')
-    if (!this.valid(from, to, text)) {
-      return Promise.reject('Commander is not on duty for "' + text + '"')
-    }
-
-    log.verbose('Commander', `CMD %s found. To Be Executed...`, text)
-    let [cmd, ...args] = text.split(/\s+/)
-    cmd = cmd.replace(/^\./, '') // strip the first '.' char for cmd
-    log.verbose('Commander', `CMD %s(%s)`, cmd, args.join(','))
+  execute(cmd, args) {
+    log.silly('Commander', 'execute(%s)', cmd, args.join(','))
 
     if (cmd in this.commands) {
-      log.verbose('Commander', 'cmd[%s] existing', cmd)
       return this.commands[cmd].apply(this, args)
     } else {
       log.verbose('Commander', 'cmd[%s] not existing(yet)', cmd)
@@ -96,14 +86,28 @@ class Commander {
   }
 
   valid(from, to, text, room) {
-    log.silly('Commander', 'valid(%s, %s, %s, %s)', from, to, text, room)
+    // log.silly('Commander', 'valid(%s, %s, %s, %s)', from, to, text, room)
 
-    if (text[0]=='.') {       // 1、必须以 "." 开头；
-      if (to=='filehelper') { // 2、必须发给 filehelper
-        return true
-      }
+    const retObj = {
+      cmd: false
+      , args: null
     }
-    return false
+
+    if (to !== 'filehelper') {  // 1、必须发给 filehelper
+      return retObj
+    }
+
+    if (text[0] !== '.') {         // 2、必须以 "." 开头；
+      return retObj
+    }
+
+    let [cmd, ...args] = text.split(/\s+/)
+    cmd = cmd.replace(/^\./, '') // strip the first '.' char for cmd
+
+    retObj.cmd  = cmd
+    retObj.args = args
+
+    return retObj
   }
 }
 
