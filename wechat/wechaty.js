@@ -19,11 +19,11 @@ wechaty
   console.log(`${url}\n[${code}] Scan QR Code above to login`)
 })
 .on('login', user => {
-  log.info('Bot', `bot login: ${user.name()}`)
+  log.info('Bot', `bot login: ${user.name ? user.name() : user}`)
   // user.dump()
   // user.dumpRaw()
 })
-.on('logout', user => log.info('Bot', `bot logout: ${user.name()}`))
+.on('logout', user => log.info('Bot', `bot logout: ${user.name ? user.name() : user}`))
 .on('error', e => {
   console.log('############# on error event ####################')
   log.error('Bot', 'bot exception: %s', e)

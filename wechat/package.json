@@ -1,0 +1,23 @@
+{
+  "name": "mikey",
+  "version": "0.0.1",
+  "description": "Mikey enhance my wechaty",
+  "main": "bot.js",
+  "scripts": {
+    "lint": "eslint src test",
+    "pretest": "npm run lint",
+    "start": "cross-env WECHATY_LOG=silly node bot.js",
+    "test": "cross-env TAP_TIMEOUT=600 tap test/*-spec.js"
+  },
+  "author": "Zhuohuan LI <zixia@zixia.net>",
+  "eslintConfig": {
+    "env": {
+      "browser": true,
+      "node": true,
+      "es6": true
+    }
+  },
+  "engines": {
+    "node": ">= 6.0.0"
+  }
+}

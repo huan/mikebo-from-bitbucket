@@ -236,7 +236,7 @@ class WechatySpeakNoEvil {
     const to    = Wechaty.Contact.load(message.to())
     const room  = Wechaty.Room.load(message.room())
 
-    if (to.stranger()){
+    if (!room && to.stranger()){
       evil = false
       reason = 'to stranger'
     }
