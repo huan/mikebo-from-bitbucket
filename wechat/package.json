@@ -19,5 +19,15 @@
   },
   "engines": {
     "node": ">= 6.0.0"
+  },
+  "dependencies": {
+    "mongodb": "^2.1.18",
+    "apiai": "^2.0.5",
+    "botbuilder": "^1.0.0",
+    "qrcode-terminal": "^0.10.0",
+    "wechaty": ""
+  },
+  "devDependencies": {
+    "assert": "^1.4.1"
   }
 }
