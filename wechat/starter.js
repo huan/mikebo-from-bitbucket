@@ -1,6 +1,10 @@
+const co = require('co')
+
 const Mikey       = require('./mikey')
 const {log}       = require('./requires')
 const {wechaty} = require('./wechaty')
+
+const Db = require('./mongo')
 
 const Starter = {
   wechaty: startWechaty
@@ -15,14 +19,29 @@ function startWechaty(brain) {
     , mouth:  wechaty
   })
 
-  wechaty
-  .on('message', m => wechaty.onWechatyMessage(m, mikey))
-  .init()
-  .catch(e => {
-    log.error('Bot', 'init() fail:' + e)
-    wechaty.quit()
-    .then(() => process.exit(-1))
-    .catch(e => console.error('startWechaty() wechaty init exception: ' + e.message))
+  return co(function* () {
+    const db = new Db()
+    yield db.init()
+
+    wechaty
+    .on('message', message => {
+      message = db.Message(message)
+      ;[message.from(), message.to(), message.room()].map(c => {
+        if (c) c = db.Contact(c)
+      })
+
+      return wechaty.onWechatyMessage({message, mikey, db})
+    })
+    .init()
+    .catch(e => {
+      log.error('Bot', 'init() fail:' + e)
+      wechaty.quit()
+      .then(() => process.exit(-1))
+      .catch(e => console.error('startWechaty() wechaty init exception: ' + e.message))
+    })
+  }).catch(e => {
+    log.error('startWechaty', 'exception: %s', e.message)
+    throw e
   })
 }
 

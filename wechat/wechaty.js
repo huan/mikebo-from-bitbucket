@@ -32,7 +32,11 @@ wechaty
 const commander = new Commander(wechaty)
 
 // must bind this to wechaty
-function onWechatyMessage(m, mikey) {
+function onWechatyMessage({
+  message
+  , mikey
+}) {
+  const m = message
 
   const from = m.get('from')
   const to = m.get('to')
@@ -158,7 +162,7 @@ function needMikey(message) {
   return false
 }
 
-wechaty.onWechatyMessage = onWechatyMessage
+Object.assign(wechaty, { onWechatyMessage })
 
 module.exports = {
   wechaty: wechaty
