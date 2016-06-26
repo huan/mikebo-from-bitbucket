@@ -9,9 +9,12 @@
   "dependencies": {
     "node-google-apps-script": "1.1.4"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "mongo-express": "^0.30.59"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "mongo-express": "cross-env VCAP_APP_HOST=0.0.0.0 ME_CONFIG_MONGODB_AUTH_DATABASE=wechaty mongo-express",
     "pull": "scripts/pull.sh"
   },
   "repository": {

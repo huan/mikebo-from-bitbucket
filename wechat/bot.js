@@ -24,7 +24,7 @@ console.log('\nMike@Wechat Loading...\n')
 
 Starter.wechaty(textbot)
 
-Starter.socket(textbot   , { port: 8081, name: 'Socket Chatter' })
+// Starter.socket(textbot   , { port: 8081, name: 'Socket Chatter' })
 Starter.socket(commander , { port: 8082, name: 'Socket Commander' })
 
 Starter.cli(textbot, {name: 'Cli'})

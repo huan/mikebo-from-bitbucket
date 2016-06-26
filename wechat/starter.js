@@ -26,8 +26,12 @@ function startWechaty(brain) {
     wechaty
     .on('message', message => {
       message = db.Message(message)
+      // message.save()
       ;[message.from(), message.to(), message.room()].map(c => {
-        if (c) c = db.Contact(c)
+        if (c) {
+          c = db.Contact(c)
+          // c.save()
+        }
       })
 
       return wechaty.onWechatyMessage({message, mikey, db})
@@ -36,7 +40,8 @@ function startWechaty(brain) {
     .catch(e => {
       log.error('Bot', 'init() fail:' + e)
       wechaty.quit()
-      .then(() => process.exit(-1))
+      .then(_ => db.close())
+      .then(_ => process.exit(-1))
       .catch(e => console.error('startWechaty() wechaty init exception: ' + e.message))
     })
   }).catch(e => {

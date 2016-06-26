@@ -26,7 +26,7 @@ wechaty
 .on('logout', user => log.info('Bot', `bot logout: ${user.name ? user.name() : user}`))
 .on('error', e => {
   console.log('############# on error event ####################')
-  log.error('Bot', 'bot exception: %s', e)
+  log.error('Bot', 'bot exception: %s', e.message)
 })
 
 const commander = new Commander(wechaty)
@@ -38,20 +38,16 @@ function onWechatyMessage({
 }) {
   const m = message
 
-  const from = m.get('from')
-  const to = m.get('to')
+  const from = m.from()
+  const to = m.to()
   const content = m.toString()
-  const room = m.get('room')
-
-  const fromContact = Wechaty.Contact.load(from)
-  const toContact   = Wechaty.Contact.load(to)
-  const roomRoom    = Wechaty.Room.load(room)
+  const room = m.room()
 
   /**
    * Print message to console for reading
    */
-  console.log((room ? '['+roomRoom.name()+']' : '')
-    + '<'+fromContact.name()+'>'
+  console.log((room ? '['+room.name()+']' : '')
+    + '<'+from.name()+'>'
     + ':' + m.toStringDigest()
     )
 
@@ -66,7 +62,7 @@ function onWechatyMessage({
   } else if (m.type() === Wechaty.Message.Type.SYS && /just added you to his[\s\/]*her contacts list/i.test(m.get('content'))) {
     // just added you to his / her contacts list
     // <秋之林>:{SYS}秋之林 just added you to his/her contacts list. Send a message to him/her now!
-    if (fromContact.stranger()) {
+    if (from.stranger()) {
       setTimeout(() => {
         this.reply(m, '谢谢你加我，我是投资人中最会飞的程序员。你可以做一下自我介绍吗？:)')
       }, 60000) // 60s

@@ -45,8 +45,9 @@ class Db {
 
     const collection = this.message
     const save = function() { // http://stackoverflow.com/a/20472728/1123955
-      log.info('Db', 'Message.save()')
+      log.info('Db', 'Message.save(%s)', this.toStringDigest())
       // console.log(this.rawObj)
+      this.rawObj.ts = Date.now()
       return collection.save(this.rawObj)
     }
     Object.assign(message, {
@@ -72,8 +73,9 @@ class Db {
 
     const collection = this.contact
     const save = function() { // http://stackoverflow.com/a/20472728/1123955
-      log.verbose('Db', 'Contact.save()')
+      log.verbose('Db', 'Contact.save(%s)', this.name())
       // console.log(this.rawObj)
+      this.rawObj.ts = Date.now()
       return collection.save(this.rawObj)
     }
     Object.assign(contact, {
