@@ -6,7 +6,7 @@ const Commander   = require('./commander')
  * Wechaty
  */
 const wechaty = new Wechaty({
-  session: 'bot.wechaty.json'
+  profile: 'bot.wechaty.json'
   , port: 18788
 })
 
@@ -121,7 +121,7 @@ function onWechatyMessage({
    */
   m.ready().then(() => { // re-ready to double check ready status
     if (needMikey(m)) {
-      mikey.ear(from, to, m.toString(), room)
+      mikey.ear(from.toString(), to.toString(), m.toString(), room.toString())
     }
  })
 

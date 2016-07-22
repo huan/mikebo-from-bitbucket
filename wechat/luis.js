@@ -7,7 +7,7 @@ const IntentAction = require('./luis-intent-action')
  *
  * PreView mode not support(yet) 2016/6/2
  */
-const model = 'https://api.projectoxford.ai/luis/v1/application?id=c30e54cf-24c6-48d4-80a8-a71bf9358cb9&subscription-key=2bc35bd5cc7f42e0839dd8400aafcd08'
+const model = 'https://api.projectoxford.ai/luis/v1/application?id=df62ad57-7090-4c21-8444-0fb421f8a4f6&subscription-key=2bc35bd5cc7f42e0839dd8400aafcd08'
 
 const luis = new BotBuilder.LuisDialog(model)
 .onDefault(IntentAction.Default)
