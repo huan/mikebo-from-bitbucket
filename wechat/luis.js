@@ -18,6 +18,6 @@ const luis = new BotBuilder.LuisDialog(model)
 .on('Greeting.Holiday'  , IntentAction.GreetingHoliday)
 .on('Thank'             , IntentAction.Thank)
 .on('Bye'               , IntentAction.Bye)
-.on('error'     , e => log.error('Luis', e))
+.on('error'             , e => log.error('Luis', e))
 
 module.exports = luis

@@ -1,7 +1,7 @@
 module.exports = {
-  Wechaty:      require('/home/ubuntu/workspace/')
-  // Wechaty:      require('wechaty')
+  // Wechaty:      require('/home/ubuntu/workspace/')
+  Wechaty:      require('wechaty').Wechaty
 
-  , log:        require('/home/ubuntu/workspace/').log
+  , log:        require('wechaty').log
   , BotBuilder: require('/home/ubuntu/git/BotBuilder/Node')
 }

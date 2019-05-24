@@ -5,9 +5,8 @@ const Commander   = require('./commander')
 /**
  * Wechaty
  */
-const wechaty = new Wechaty({
-  profile: 'bot.wechaty.json'
-  , port: 18788
+const wechaty = Wechaty.instance({
+  profile: 'bot'
 })
 
 wechaty
