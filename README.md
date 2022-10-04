@@ -2,28 +2,15 @@
 
 This README would normally document whatever steps are necessary to get your application up and running.
 
-### What is this repository for? ###
+## History
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+- Dec 2015 - Jun 2016: working on BitBucket
+- Oct 2022: move to GitHub
 
-### How do I get set up? ###
+## Author
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+Huan, @huan
 
-### Contribution guidelines ###
+## License
 
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+Apache-2.0
